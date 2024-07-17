@@ -13,7 +13,7 @@ node cmd/index.js createACW <email>
 ```
 
 Create external wallet 
-```
+
 ```
 node cmd/index.js createExternal <email>
 ```
