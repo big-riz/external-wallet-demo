@@ -50,7 +50,7 @@ export function RequestCode({ setEmail, setRequestId, setCurrentStep, setUseExte
 
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-background">
+    <div className="flex flex-col items-center justify-center bg-background">
       <div className="w-full max-w-md"><div />
         <Card className="mt-8">
           <CardHeader>

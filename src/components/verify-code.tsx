@@ -54,7 +54,7 @@ export function VerifyCode({ email, requestId, setCurrentStep, useExternalWallet
     });
   };
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-background">
+    <div className="flex flex-col items-center justify-center bg-background">
       <div className="w-full max-w-md">
         <div />
         <Card className="mt-8">
@@ -80,9 +80,6 @@ export function VerifyCode({ email, requestId, setCurrentStep, useExternalWallet
             <Button className="w-full" onClick={handleVerify}>Verify</Button>
           </CardFooter>
         </Card>
-        <div className="mt-4">
-            <Button onClick={resetData} className="w-full">Start Over</Button>
-        </div>
       </div>
     </div>
   )
