@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server';
 import { HandCashConnect, Environments } from '@handcash/handcash-connect';
 import 'dotenv/config';
 
+const localEnv = {
+  ...Environments.iae,
+  apiEndpoint: 'http://localhost:8000',
+}
 const handCashConnect = new HandCashConnect({
   appId: process.env.HANDCASH_APP_ID,
   appSecret: process.env.HANDCASH_APP_SECRET,
-  env: Environments.iae,
+  env: localEnv,
 });
 
 const verifyCode = async (email, verificationCode, requestId, alias) => {

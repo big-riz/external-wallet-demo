@@ -5,10 +5,14 @@ const crypto = require('crypto');
 const { Command } = require('commander');
 const readline = require('readline');
 const { HandCashConnect, Environments } = require('@handcash/handcash-connect');
+const localEnv = {
+    ...Environments.iae,
+    apiEndpoint: 'http://localhost:8000'
+}
 const handCashConnect = new HandCashConnect({ 
    appId: process.env.HANDCASH_APP_ID,
    appSecret: process.env.HANDCASH_APP_SECRET,
-   env: Environments.iae
+   env: localEnv,
 });
 
 const program = new Command();
@@ -65,13 +69,14 @@ program
         email = email || 'brandon.bryant002@gmail.com';
         const randomEmail = `${email.split('@')[0]}+${crypto.randomInt(10000)}@${email.split('@')[1]}`;
         const requestId = await generateRequest(randomEmail);
-        console.log(`Request ID: ${requestId}`);
-        console.log(`Email: ${randomEmail}`);
         
         const code = await promptUserInput('Enter the verification code: ');
 
         const keyPair = await verifyCode(code, requestId);
-        await handCashConnect.createNewExternalAccount(keyPair.publicKey, randomEmail);
+
+        
+        const alias = randomEmail.split('@')[0];
+        await handCashConnect.createNewExternalAccount(keyPair.publicKey, randomEmail, alias);
         const authToken = keyPair.privateKey;
         const cloudAccount = handCashConnect.getAccountFromAuthToken(authToken);
         const profile = await cloudAccount.profile.getCurrentProfile();
