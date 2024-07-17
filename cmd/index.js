@@ -18,14 +18,10 @@ const generateRequest = async (email) => {
     return requestId;
 }
 
-const verifyCode = async (email, verificationCode, requestId) => {
+const verifyCode = async (verificationCode, requestId) => {
     const keyPair = handCashConnect.generateAuthenticationKeyPair();
     await handCashConnect.verifyEmailCode(requestId, verificationCode, keyPair.publicKey);
-    const publicProfile = await handCashConnect.createNewAccount(keyPair.publicKey, email);
-    return {
-        authToken: keyPair.privateKey,
-        publicProfile,
-    };
+    return keyPair;
 }
 
 const promptUserInput = (query) => {
@@ -40,8 +36,8 @@ const promptUserInput = (query) => {
 }
 
 program
-    .command('create [email]')
-    .description('Create and verify a new account with an optional email parameter')
+    .command('createACW [email]')
+    .description('Create and verify a new app created wallet account')
     .action(async (email) => {
         email = email || 'brandon.bryant002@gmail.com';
         const randomEmail = `${email.split('@')[0]}+${crypto.randomInt(10000)}@${email.split('@')[1]}`;
@@ -51,7 +47,9 @@ program
         
         const code = await promptUserInput('Enter the verification code: ');
 
-        const { authToken, publicProfile } = await verifyCode(randomEmail, code, requestId);
+        const keyPair = await verifyCode(code, requestId);
+        await handCashConnect.createNewAccount(keyPair.publicKey, randomEmail);
+        const authToken = keyPair.privateKey;
         const cloudAccount = handCashConnect.getAccountFromAuthToken(authToken);
         const profile = await cloudAccount.profile.getCurrentProfile();
         console.log({
@@ -59,5 +57,29 @@ program
             profile
         });
     });
+
+program
+    .command('createExternal [email]')
+    .description('Create and verify a new app created wallet account')
+    .action(async (email) => {
+        email = email || 'brandon.bryant002@gmail.com';
+        const randomEmail = `${email.split('@')[0]}+${crypto.randomInt(10000)}@${email.split('@')[1]}`;
+        const requestId = await generateRequest(randomEmail);
+        console.log(`Request ID: ${requestId}`);
+        console.log(`Email: ${randomEmail}`);
+        
+        const code = await promptUserInput('Enter the verification code: ');
+
+        const keyPair = await verifyCode(code, requestId);
+        await handCashConnect.createNewExternalAccount(keyPair.publicKey, randomEmail);
+        const authToken = keyPair.privateKey;
+        const cloudAccount = handCashConnect.getAccountFromAuthToken(authToken);
+        const profile = await cloudAccount.profile.getCurrentProfile();
+        console.log({
+            accessToken: authToken,
+            profile
+        });
+    });
+
 
 program.parse(process.argv);

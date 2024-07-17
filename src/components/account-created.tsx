@@ -22,6 +22,14 @@ async function fetchProfile(authToken: string) {
   return response.json();
 }
 
+function addToLocalStorage(data: any) {
+  const storedData = localStorage.getItem('users');
+  const users = storedData ? JSON.parse(storedData) : {}
+  users[data.privateProfile.email] = { authToken: data.authToken, profile: data.publicProfile };
+  localStorage.setItem('users', JSON.stringify(users));
+  console.log(users)
+}
+
 export function AccountCreated({ authToken, isExternal, resetState }: { authToken: string, isExternal: boolean, resetState: any }) {
   const [profileData, setProfileData] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +42,7 @@ export function AccountCreated({ authToken, isExternal, resetState }: { authToke
         const data = await fetchProfile(authToken);
         if (isMounted) {
           setProfileData(data);
+          addToLocalStorage(data);
         }
       } catch (err) {
         if (isMounted) {
