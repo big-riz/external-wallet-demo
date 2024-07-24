@@ -6,16 +6,16 @@ import { Button } from "@/components/ui/button"
 import { toast } from 'react-toastify';
 import { debounce } from 'lodash';
 import { Check, X } from 'lucide-react';
+import { apiService } from '@/lib/api';
 
 interface VerifyCodeProps {
   email: string;
   requestId: string;
   setCurrentStep: (step: number) => void;
   resetData: () => void;
-  setAuthTokens: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
-export function VerifyCode({ email, requestId, setCurrentStep, resetData, setAuthTokens }: VerifyCodeProps) {
+export function VerifyCode({ email, requestId, setCurrentStep, resetData }: VerifyCodeProps) {
   const [verificationCode, setVerificationCode] = useState('');
   const [alias, setAlias] = useState('');
   const [isAliasAvailable, setIsAliasAvailable] = useState<boolean | null>(null);
@@ -29,26 +29,9 @@ export function VerifyCode({ email, requestId, setCurrentStep, resetData, setAut
       }
 
       setIsCheckingAlias(true);
-      try {
-        const response = await fetch('/api/aliasAvailability', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ alias: aliasToCheck }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setIsAliasAvailable(data.isAvailable);
-        } else {
-          console.error('Failed to check alias availability');
-          setIsAliasAvailable(null);
-        }
-      } catch (error) {
-        console.error('Error checking alias availability:', error);
-        setIsAliasAvailable(null);
-      } finally {
-        setIsCheckingAlias(false);
-      }
+      const response = await apiService.checkAliasAvailability(aliasToCheck);
+      setIsAliasAvailable(response.data?.isAvailable ?? false);
+      setIsCheckingAlias(false);
     }, 300),
     []
   );
@@ -80,47 +63,23 @@ export function VerifyCode({ email, requestId, setCurrentStep, resetData, setAut
       return;
     }
 
-    const verifyPromise = new Promise(async (resolve, reject) => {
-      try {
-        const verifyData = {
-          email,
-          verificationCode,
-          requestId,
-          alias,
-        };
-
-        const response = await fetch('/api/verifyWallet', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(verifyData),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setAuthTokens(prevTokens => ({
-            ...prevTokens,
-            [email]: data.authToken
-          }));
-          setCurrentStep(3);
-          resolve('Wallet verified successfully!');
-        } else {
-          const errorData = await response.json();
-          reject(errorData.message || 'Failed to verify wallet');
-        }
-      } catch (error) {
-        reject('Failed to verify wallet');
-      }
+    const verifyPromise = apiService.verifyEmailCode({
+      email,
+      verificationCode,
+      requestId,
+      alias,
     });
 
     toast.promise(verifyPromise, {
-      pending: 'Verifying wallet...',
-      success: 'Wallet verified successfully!',
-      error: {
-        render({ data }) {
-          return typeof data === 'string' ? data : 'Error verifying wallet';
-        }
-      }
+      pending: 'Creating wallet...',
+      success: 'Wallet created successfully!',
+      error: 'Failed to create wallet'
     });
+
+    const response = await verifyPromise;
+    if (response.data) {
+      setCurrentStep(3);
+    }
   };
 
   return (

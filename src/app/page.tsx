@@ -17,7 +17,6 @@ export default function Home() {
   const [currentStep, setCurrentStep] = useState(1);
   const [currentView, setCurrentView] = useState('createUser');
   const [selectedUser, setSelectedUser] = useState<{ email: string; authToken: string } | null>(null);
-  const [authTokens, setAuthTokens] = useState<Record<string, string>>({});
   const [adminToken, setAdminToken] = useState('');
 
   const resetState = () => {
@@ -84,8 +83,7 @@ export default function Home() {
           )}
           {currentView === 'manageUsers' && adminToken && (
             <Users 
-              authTokens={authTokens}
-              setAuthTokens={setAuthTokens}
+              adminToken={adminToken}
               setSelectedUser={setSelectedUser} 
               setCurrentView={setCurrentView}
             />
@@ -113,10 +111,9 @@ export default function Home() {
                   requestId={requestId}
                   setCurrentStep={setCurrentStep}
                   resetData={resetState}
-                  setAuthTokens={setAuthTokens}
                 />
               )}
-              {currentStep === 3 && authTokens[email] && (
+              {currentStep === 3 && (
                 <AccountCreated 
                   email={email}
                   resetState={resetState} 

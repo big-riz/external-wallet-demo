@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { apiService } from '@/lib/api';
 
 export function RequestCode({ setEmail, setRequestId, setCurrentStep, email = '' }: { 
   setEmail: (email: string) => void,
@@ -16,32 +17,20 @@ export function RequestCode({ setEmail, setRequestId, setCurrentStep, email = ''
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const createAccountPromise = new Promise(async (resolve, reject) => {
-      try {
-        const response = await fetch('/api/createWallet', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: inputEmail }),
-        });
-        if (response.ok) {
-          const result = await response.json();
-          setEmail(result.email);
-          setRequestId(result.requestId);
-          setCurrentStep(2);
-          resolve(true);
-        } else {
-          reject('Failed to create external wallet');
-        }
-      } catch (error) {
-        reject('Failed to create external wallet');
-      }
-    });
+    const createAccountPromise = apiService.requestEmailCode(inputEmail);
   
     toast.promise(createAccountPromise, {
       pending: 'Creating external wallet...',
       success: 'External wallet created successfully!',
       error: 'Error creating external wallet',
     });
+
+    const response = await createAccountPromise;
+    if (response.data) {
+      setEmail(response.data.email);
+      setRequestId(response.data.requestId);
+      setCurrentStep(2);
+    }
   };
 
   const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {

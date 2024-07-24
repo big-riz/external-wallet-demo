@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { WalletService, Environments, HandCashApiError } from '@handcash/handcash-sdk';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { createUser } from '@/lib/db';
 import 'dotenv/config';
 
 const walletService = new WalletService({
@@ -30,6 +31,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     try {
       const requestId = await walletService.requestSignUpEmailCode(randomEmail);
+      await createUser(randomEmail);
+      
       return NextResponse.json({ email: randomEmail, requestId }, { status: 201 });
     } catch (error) {
       if (error instanceof HandCashApiError) {

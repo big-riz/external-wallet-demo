@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface AccountCreatedProps {
   email: string;
@@ -12,9 +12,17 @@ interface AccountCreatedProps {
 }
 
 export function AccountCreated({ email, resetState, setCurrentView }: AccountCreatedProps) {
+  const router = useRouter();
+
   const handleManageUsers = () => {
+    // Instead of directly setting the view to 'manageUsers',
+    // we'll navigate to the admin login page or prompt for admin login
+    setCurrentView('adminLogin');
+  };
+
+  const handleCreateAnother = () => {
     resetState();
-    setCurrentView('manageUsers');
+    setCurrentView('createUser');
   };
 
   return (
@@ -36,9 +44,9 @@ export function AccountCreated({ email, resetState, setCurrentView }: AccountCre
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button className="w-full" onClick={handleManageUsers}>
-              Manage Users
+              Manage Users (Admin Access)
             </Button>
-            <Button variant="outline" className="w-full" onClick={resetState}>
+            <Button variant="outline" className="w-full" onClick={handleCreateAnother}>
               Create Another Account
             </Button>
           </CardFooter>

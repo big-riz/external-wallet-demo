@@ -1,21 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from 'lucide-react'
+import { apiService } from '@/lib/api';
 
 interface UsersProps {
-  authTokens: Record<string, string>;
-  setAuthTokens: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  adminToken: string;
   setCurrentView: (view: string) => void;
   setSelectedUser: (user: { email: string; authToken: string }) => void;
 }
 
-export function Users({ authTokens, setAuthTokens, setCurrentView, setSelectedUser }: UsersProps) {
+export function Users({ adminToken, setCurrentView, setSelectedUser }: UsersProps) {
+  const [users, setUsers] = useState<Array<{ email: string; auth_token: string }>>([]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const response = await apiService.getUsers(adminToken);
+      if (response.data) {
+        setUsers(response.data);
+      }
+    };
+    fetchUsers();
+  }, [adminToken]);
+
   const handleDelete = async (email: string) => {
-    const updatedTokens = { ...authTokens };
-    delete updatedTokens[email];
-    setAuthTokens(updatedTokens);
+    const response = await apiService.deleteUser(email, adminToken);
+    if (response.data) {
+      setUsers(users.filter(user => user.email !== email));
+    }
   };
 
   const handleSelectUser = (email: string, authToken: string) => {
@@ -41,10 +54,10 @@ export function Users({ authTokens, setAuthTokens, setCurrentView, setSelectedUs
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Object.entries(authTokens).map(([email, authToken]) => (
-                  <TableRow key={email} className="cursor-pointer" onClick={() => handleSelectUser(email, authToken)}>
+                {users.map(({ email, auth_token }) => (
+                  <TableRow key={email} className="cursor-pointer" onClick={() => handleSelectUser(email, auth_token)}>
                     <TableCell className="w-1/3">{email}</TableCell>
-                    <TableCell className="w-1/2">{authToken.slice(0, 20)}...</TableCell>
+                    <TableCell className="w-1/2">{auth_token?.slice(0, 20)}...</TableCell>
                     <TableCell className="w-1/6 text-center">
                       <Button 
                         variant="destructive" 

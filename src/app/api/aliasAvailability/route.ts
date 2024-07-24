@@ -29,16 +29,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const isAvailable = await walletService.isAliasAvailable(alias);
       return NextResponse.json({ isAvailable }, { status: 200 });
     } catch (error: any) {
-      if (error.message.includes('The alias must be between 4 and 20 characters')) {
-        return NextResponse.json({ message: error.message, errorCode: 'ALIAS_INVALID' }, { status: 400 });
-      }
       if (error instanceof HandCashApiError) {
         console.error('SDK Error during alias availability check:', error);
         return NextResponse.json({ message: 'Failed to check alias availability', errorCode: 'ALIAS_CHECK_FAILED' }, { status: 400 });
       }
       throw error;
     }
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Invalid alias. The alias must be between 4 and 50 characters long and can only contain letters, numbers, hyphens, underscores, and periods.') {
+      return NextResponse.json({ message: error.message, errorCode: 'ALIAS_INVALID' }, { status: 400 });
+    }
     console.error('Unexpected error:', error);
     return NextResponse.json({ message: 'An unexpected error occurred', errorCode: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
   }

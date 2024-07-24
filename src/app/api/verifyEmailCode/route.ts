@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WalletService, Environments, Crypto, HandCashApiError } from '@handcash/handcash-sdk';
+import { updateUserAuthToken } from '@/lib/db';
 import { z } from 'zod';
 import 'dotenv/config';
 
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     try {
       await walletService.createWalletAccount(keyPair.publicKey, email, alias);
+      await updateUserAuthToken(email, keyPair.privateKey);
     } catch (error) {
       if (error instanceof HandCashApiError) {
         console.error('SDK Error during wallet creation:', error);
