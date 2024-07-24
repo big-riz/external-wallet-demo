@@ -12,7 +12,7 @@ interface UsersProps {
 }
 
 export function Users({ authTokens, setAuthTokens, setCurrentView, setSelectedUser }: UsersProps) {
-  const handleDelete = (email: string) => {
+  const handleDelete = async (email: string) => {
     const updatedTokens = { ...authTokens };
     delete updatedTokens[email];
     setAuthTokens(updatedTokens);

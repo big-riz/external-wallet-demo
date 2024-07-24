@@ -9,20 +9,26 @@ import { VerifyCode } from '@/components/verify-code'
 import { AccountCreated } from '@/components/account-created'
 import { Users } from '@/components/users';
 import { User } from '@/components/user';
+import { AdminLogin } from '@/components/admin-login';
 
 export default function Home() {
   const [email, setEmail] = useState('');
   const [requestId, setRequestId] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
-  const [authTokens, setAuthTokens] = useState<Record<string, string>>({});
-  const [currentView, setCurrentView] = useState('manageUsers');
+  const [currentView, setCurrentView] = useState('createUser');
   const [selectedUser, setSelectedUser] = useState<{ email: string; authToken: string } | null>(null);
-
+  const [authTokens, setAuthTokens] = useState<Record<string, string>>({});
+  const [adminToken, setAdminToken] = useState('');
 
   const resetState = () => {
     setEmail('');
     setRequestId('');
     setCurrentStep(1);
+  }
+
+  const handleLogout = () => {
+    setAdminToken('');
+    setCurrentView('createUser');
   }
 
   const NavButton = ({ view, children }: {
@@ -31,7 +37,13 @@ export default function Home() {
   }) => (
     <Button 
       variant={currentView === view ? "default" : "ghost"} 
-      onClick={() => setCurrentView(view)}
+      onClick={() => {
+        if (view === 'manageUsers' && !adminToken) {
+          setCurrentView('adminLogin');
+        } else {
+          setCurrentView(view);
+        }
+      }}
       className={currentView === view ? "bg-primary text-primary-foreground" : ""}
     >
       {children}
@@ -47,24 +59,37 @@ export default function Home() {
               Defi
             </Link>
             <div className="hidden md:flex items-center gap-6">
-              <NavButton view="manageUsers">Manage Users</NavButton>
               <NavButton view="createUser">Create User</NavButton>
+              <NavButton view="manageUsers">Manage Users</NavButton>
             </div>
           </div>
           <div className="ml-auto flex items-center gap-4">
-            <Button variant="outline">
-              <BellIcon className="h-5 w-5" />
-            </Button>
+            {adminToken && (
+              <>
+                <span className="text-sm text-muted-foreground">Admin</span>
+                <Button variant="outline" onClick={handleLogout}>Logout</Button>
+              </>
+            )}
             <Avatar>
               <AvatarImage src="/placeholder-user.jpg" />
-              <AvatarFallback>SC</AvatarFallback>
+              <AvatarFallback>AD</AvatarFallback>
             </Avatar>
           </div>
         </nav>
       </header>
       <main className="flex-grow flex items-start justify-center bg-background">
         <div className="w-full max-w-4xl p-4 md:p-8">
-          {currentView === 'manageUsers' && <Users authTokens={authTokens} setSelectedUser={setSelectedUser} setCurrentView={setCurrentView} setAuthTokens={setAuthTokens} />}
+          {currentView === 'adminLogin' && (
+            <AdminLogin setAdminToken={setAdminToken} setCurrentView={setCurrentView} />
+          )}
+          {currentView === 'manageUsers' && adminToken && (
+            <Users 
+              authTokens={authTokens}
+              setAuthTokens={setAuthTokens}
+              setSelectedUser={setSelectedUser} 
+              setCurrentView={setCurrentView}
+            />
+          )}
           {currentView === 'userDetails' && selectedUser && (
             <User
               email={selectedUser.email}
@@ -115,33 +140,13 @@ export default function Home() {
               Defi
             </Link>
             <div className="flex flex-col items-start gap-4">
-              <NavButton view="manageUsers">Manage Users</NavButton>
               <NavButton view="createUser">Create User</NavButton>
+              <NavButton view="manageUsers">Manage Users</NavButton>
             </div>
           </div>
         </SheetContent>
       </Sheet>
     </div>
-  )
-}
-
-function BellIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
   )
 }
 
