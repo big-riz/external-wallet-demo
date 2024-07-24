@@ -1,34 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Trash2, RefreshCw } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 
-export function Users() {
-  const [users, setUsers] = useState({});
+interface UsersProps {
+  authTokens: Record<string, string>;
+  setAuthTokens: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  setCurrentView: (view: string) => void;
+  setSelectedUser: (user: { email: string; authToken: string }) => void;
+}
 
-  useEffect(() => {
-    const storedData = localStorage.getItem('users');
-    if (storedData) {
-      const parsedUsers = JSON.parse(storedData);
-      setUsers(parsedUsers);
-    }
-  }, []);
-
-  const handleDelete = (email) => {
-    const updatedUsers = { ...users };
-    delete updatedUsers[email];
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    setUsers(updatedUsers);
+export function Users({ authTokens, setAuthTokens, setCurrentView, setSelectedUser }: UsersProps) {
+  const handleDelete = (email: string) => {
+    const updatedTokens = { ...authTokens };
+    delete updatedTokens[email];
+    setAuthTokens(updatedTokens);
   };
 
-  const handleRequestCode = async (email) => {
-    console.log('reset state', 'Set state to 2');
-    // Placeholder for future implementation
-    // setEmail(result.email);
-    // setRequestId(result.requestId);
-    // setCurrentStep(2);
-    // resolve(true);
+  const handleSelectUser = (email: string, authToken: string) => {
+    setSelectedUser({ email, authToken });
+    setCurrentView('userDetails');
   };
 
   return (
@@ -44,26 +36,25 @@ export function Users() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-1/3">Email</TableHead>
-                  <TableHead className="w-1/3">Handle</TableHead>
-                  <TableHead className="w-1/6 text-center">New Code</TableHead>
+                  <TableHead className="w-1/2">Auth Token</TableHead>
                   <TableHead className="w-1/6 text-center">Delete</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Object.entries(users).map(([email, userData]) => (
-                  <TableRow key={email}>
+                {Object.entries(authTokens).map(([email, authToken]) => (
+                  <TableRow key={email} className="cursor-pointer" onClick={() => handleSelectUser(email, authToken)}>
                     <TableCell className="w-1/3">{email}</TableCell>
-                    <TableCell className="w-1/3">{userData.profile.handle}</TableCell>
+                    <TableCell className="w-1/2">{authToken.slice(0, 20)}...</TableCell>
                     <TableCell className="w-1/6 text-center">
-                      <Button variant="outline" size="sm" onClick={() => handleRequestCode(email)}>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        New Code
-                      </Button>
-                    </TableCell>
-                    <TableCell className="w-1/6 text-center">
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(email)}>
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(email);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

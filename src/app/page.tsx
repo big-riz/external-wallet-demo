@@ -8,24 +8,27 @@ import { RequestCode } from '@/components/request-code'
 import { VerifyCode } from '@/components/verify-code'
 import { AccountCreated } from '@/components/account-created'
 import { Users } from '@/components/users';
+import { User } from '@/components/user';
 
 export default function Home() {
   const [email, setEmail] = useState('');
   const [requestId, setRequestId] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
-  const [useExternalWallet, setUseExternalWallet] = useState(false);
-  const [authToken, setAuthToken] = useState('');
-  const [currentView, setCurrentView] = useState('manageUsers'); // 'manageUsers' or 'createUser'
+  const [authTokens, setAuthTokens] = useState<Record<string, string>>({});
+  const [currentView, setCurrentView] = useState('manageUsers');
+  const [selectedUser, setSelectedUser] = useState<{ email: string; authToken: string } | null>(null);
+
 
   const resetState = () => {
     setEmail('');
     setRequestId('');
     setCurrentStep(1);
-    setUseExternalWallet(false);
-    setAuthToken('');
   }
 
-  const NavButton = ({ view, children }) => (
+  const NavButton = ({ view, children }: {
+    view: string;
+    children: React.ReactNode;
+  }) => (
     <Button 
       variant={currentView === view ? "default" : "ghost"} 
       onClick={() => setCurrentView(view)}
@@ -61,7 +64,14 @@ export default function Home() {
       </header>
       <main className="flex-grow flex items-start justify-center bg-background">
         <div className="w-full max-w-4xl p-4 md:p-8">
-          {currentView === 'manageUsers' && <Users />}
+          {currentView === 'manageUsers' && <Users authTokens={authTokens} setSelectedUser={setSelectedUser} setCurrentView={setCurrentView} setAuthTokens={setAuthTokens} />}
+          {currentView === 'userDetails' && selectedUser && (
+            <User
+              email={selectedUser.email}
+              authToken={selectedUser.authToken}
+              setCurrentView={setCurrentView}
+            />
+          )}
           {currentView === 'createUser' && (
             <div className="w-full max-w-md mx-auto">
               {currentStep === 1 && (
@@ -70,24 +80,22 @@ export default function Home() {
                   setEmail={setEmail}
                   setRequestId={setRequestId}
                   setCurrentStep={setCurrentStep}
-                  setUseExternalWallet={setUseExternalWallet}
                 />
               )}
               {currentStep === 2 && (
                 <VerifyCode
                   email={email}
-                  setAuthToken={setAuthToken}
                   requestId={requestId}
                   setCurrentStep={setCurrentStep}
-                  useExternalWallet={useExternalWallet}
                   resetData={resetState}
+                  setAuthTokens={setAuthTokens}
                 />
               )}
-              {currentStep === 3 && authToken && (
+              {currentStep === 3 && authTokens[email] && (
                 <AccountCreated 
-                  authToken={authToken} 
-                  isExternal={useExternalWallet} 
+                  email={email}
                   resetState={resetState} 
+                  setCurrentView={setCurrentView}
                 />
               )}
             </div>
