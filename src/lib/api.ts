@@ -1,7 +1,5 @@
-// src/lib/api-service.ts
-
 import { toast } from 'react-toastify';
-
+import { Types } from '@handcash/handcash-sdk';
 const API_BASE_URL = '/api';
 
 interface ApiResponse<T> {
@@ -105,6 +103,50 @@ export const apiService = {
       return handleApiResponse(response);
     } catch (error) {
       toast.error('Failed to delete user');
+      return { error: (error as Error).message };
+    }
+  },
+
+  async getDepositInfo(email: string): Promise<ApiResponse<{ id: string; alias: string; paymail: string; base58Address: string }>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/depositInfo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+
+        body: JSON.stringify({ email }),
+      });
+      return handleApiResponse(response);
+    } catch (error: any) {
+      toast.error(error?.message);
+      return { error: (error as Error).message };
+    }
+  },
+  async getTransactionHistory(email: string): Promise<ApiResponse<Array<Types.PaymentResult>>>{
+    try {
+      const response = await fetch(`${API_BASE_URL}/transactionHistory`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed to fetch transaction history');
+      return { error: (error as Error).message };
+    }
+  },
+
+  async getUserBalances(email: string): Promise<ApiResponse<Array<Types.UserBalance>>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/userBalance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed to fetch user balances');
       return { error: (error as Error).message };
     }
   },
