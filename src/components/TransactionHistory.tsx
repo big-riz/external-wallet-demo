@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Types } from '@handcash/handcash-sdk';
 import { Loader2 } from 'lucide-react';
 import { apiService } from '@/lib/api';
 
@@ -8,30 +9,9 @@ interface TransactionHistoryProps {
   email: string;
 }
 
-interface PaymentResult {
-  transactionId: string;
-  note: string;
-  time: number;
-  type: 'send' | 'receive';
-  units: number;
-  fiatCurrencyCode: {
-    units: number;
-    currencyCode: string;
-  };
-  currency: {
-    code: string;
-    logoUrl: string;
-  };
-  participants: Array<{
-    id: string;
-    type: string;
-    alias: string;
-    tags: string[];
-  }>;
-}
 
 export function TransactionHistory({ email }: TransactionHistoryProps) {
-  const [transactions, setTransactions] = useState<PaymentResult[]>([]);
+  const [transactions, setTransactions] = useState<Types.PaymentResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,7 +67,7 @@ export function TransactionHistory({ email }: TransactionHistoryProps) {
                     <img src={tx.currency.logoUrl} alt={tx.currency.code} className="w-4 h-4 inline ml-1" />
                   </TableCell>
                   <TableCell>
-                    {tx.fiatEquivalent.units} {tx.fiatEquivalent.currencyCode}
+                    {tx.fiatEquivalent.currencyCode} {tx.fiatEquivalent.currencyCode}
                   </TableCell>
                   <TableCell>
                     {tx.participants[0]?.alias || 'N/A'}
