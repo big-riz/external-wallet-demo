@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { WalletService, Environments, Types } from '@handcash/handcash-sdk';
-import { getUser } from '@/lib/db';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware/user-auth';
+
 import 'dotenv/config';
 
 const walletService = new WalletService({
@@ -9,16 +10,13 @@ const walletService = new WalletService({
   env: Environments.local,
 });
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const GET = withAuth(async (request: AuthenticatedRequest): Promise<NextResponse> => {
   try {
-    const body = await request.json();
-    const user = await getUser(body.email);
-    const authToken = user.auth_token;
-    const account = walletService.getWalletAccountFromAuthToken(authToken);
+    const account = walletService.getWalletAccountFromAuthToken(request.user.authToken);
     const depositInfo: Types.DepositInfo = await account.wallet.getDepositInfo();
     return NextResponse.json(depositInfo, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ message: 'Failed to get Deposit info' }, { status: 500 });
   }
-}
+}, true, false);

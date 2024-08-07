@@ -1,90 +1,144 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useAuth } from '@/lib/auth-context';
 import { apiService } from '@/lib/api';
-import { Loader2 } from 'lucide-react';
 import { UserBalance } from './UserBalance';
 import { TransactionHistory } from './TransactionHistory';
+import { Types } from '@handcash/handcash-sdk';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { useRouter } from 'next/navigation';
+import { CreateWallet } from './create-wallet';
+import { toast } from 'react-toastify';
+import { DepositInfo } from './user/deposit-info';
 
-interface UserProps {
-  email: string;
-  authToken: string;
-  setCurrentView: (view: string) => void;
+interface UserData {
+  balances: Types.UserBalance[],
+  transactionHistory: Types.PaymentResult[],
+  depositInfo: Types.DepositInfo,
 }
 
-interface DepositInfo {
-  id: string;
-  alias: string;
-  paymail: string;
-  base58Address: string;
-}
-
-export function User({ email, authToken, setCurrentView }: UserProps) {
-  const [depositInfo, setDepositInfo] = useState<DepositInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function UserPage() {
+  const { user, token } = useAuth();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateWallet, setShowCreateWallet] = useState(false);
+  const [emailCodeRequestId, setEmailCodeRequestId] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchDepositInfo = async () => {
+    if (!user || !token) {
+      router.push('/auth');
+      return;
+    }
+
+    const fetchUserData = async () => {
+      if (!user.walletId) {
+        return;
+      }
+
       setIsLoading(true);
-      const response = await apiService.getDepositInfo(email);
-      if (response.data) {
-        setDepositInfo(response.data);
+      try {
+        const [balanceResponse, historyResponse, depositResponse] = await Promise.all([
+          apiService.getUserBalances(token),
+          apiService.getTransactionHistory(token),
+          apiService.getDepositInfo(token),
+        ]);
+        setUserData({
+          balances: balanceResponse.data as Types.UserBalance[],
+          transactionHistory: historyResponse.data as Types.PaymentResult[],
+          depositInfo: depositResponse.data as Types.DepositInfo,
+        });
         setError(null);
-      } else {
-        setError('Failed to fetch deposit info');
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setError('An error occurred while fetching user data');
       }
       setIsLoading(false);
     };
 
-    fetchDepositInfo();
-  }, [email]);
+    fetchUserData();
+  }, [user, token, router]);
+
+  const handleVerifyEmail = async () => {
+    if (!token) {
+      toast.error('Authentication token not found');
+      return;
+    }
+
+    try {
+      const response = await apiService.requestEmailCode(token);
+      if (response.data && response.data.requestId) {
+        setEmailCodeRequestId(response.data.requestId);
+        setShowCreateWallet(true);
+        toast.success('Verification code sent to your email');
+      } else {
+        toast.error('Failed to request email verification');
+      }
+    } catch (error) {
+      console.error('Error requesting email code:', error);
+      toast.error('Failed to request email verification');
+    }
+  };
+
+  if (!user || !token) {
+    return null; // The useEffect will handle routing to /auth
+  }
 
   return (
     <div className="w-full px-4 py-8 bg-background">
-      <Card className="w-full max-w-2xl mx-auto mb-8">
-        <CardHeader>
-          <CardTitle>User Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold">Email</h3>
-              <p>{email}</p>
+      <h1 className="text-2xl font-bold mb-4">User Information</h1>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Attribute</TableHead>
+            <TableHead>Value</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>ID</TableCell>
+            <TableCell>{user.id}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>Email</TableCell>
+            <TableCell>{user.email}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+
+      {!user.walletId && !showCreateWallet && (
+        <div className="mt-4">
+          <p>You don't have a wallet yet.</p>
+          <Button onClick={handleVerifyEmail} className="mt-2">
+            Verify Email
+          </Button>
+        </div>
+      )}
+
+      {showCreateWallet && (
+        <div className="mt-4">
+          <CreateWallet requestId={emailCodeRequestId} />
+        </div>
+      )}
+
+      {user.walletId && (
+        <>
+          {isLoading ? (
+            <div className="mt-4">Loading user data...</div>
+          ) : error ? (
+            <div className="mt-4 text-red-500">Error: {error}</div>
+          ) : userData ? (
+            <div className="mt-8 space-y-8">
+              <DepositInfo depositInfo={userData.depositInfo} />
+              <UserBalance balances={userData.balances} />
+              <TransactionHistory transactions={userData.transactionHistory} />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold">Auth Token</h3>
-              <p className="break-all">{authToken}</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">Deposit Information</h3>
-              {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <p>Loading deposit info...</p>
-                </div>
-              ) : error ? (
-                <p className="text-red-500">{error}</p>
-              ) : depositInfo ? (
-                <div className="space-y-2">
-                  <p><span className="font-medium">ID:</span> {depositInfo.id}</p>
-                  <p><span className="font-medium">Alias:</span> {depositInfo.alias}</p>
-                  <p><span className="font-medium">Paymail:</span> {depositInfo.paymail}</p>
-                  <p><span className="font-medium">Base58 Address:</span> {depositInfo.base58Address}</p>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button onClick={() => setCurrentView('manageUsers')}>Back to Manage Users</Button>
-        </CardFooter>
-      </Card>
-      
-      <div className="space-y-8">
-        <UserBalance email={email} />
-        <TransactionHistory email={email} />
-      </div>
+          ) : null}
+        </>
+      )}
     </div>
-  )
+  );
 }

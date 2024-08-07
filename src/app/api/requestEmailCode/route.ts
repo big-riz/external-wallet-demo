@@ -1,9 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { WalletService, Environments, HandCashApiError } from '@handcash/handcash-sdk';
-import { z } from 'zod';
-import crypto from 'crypto';
-import { createUser } from '@/lib/db';
-import 'dotenv/config';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware/user-auth';
 
 const walletService = new WalletService({
   appId: process.env.HANDCASH_APP_ID as string,
@@ -11,29 +8,13 @@ const walletService = new WalletService({
   env: Environments.local,
 });
 
-const inputSchema = z.object({
-  email: z.string().email('Invalid email format'),
-});
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withAuth(async (request: AuthenticatedRequest): Promise<NextResponse> => {
   try {
-    const body = await request.json();
-    
-    const result = inputSchema.safeParse(body);
-    if (!result.success) {
-      const errorMessages = result.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
-      return NextResponse.json({ message: 'Invalid input', details: errorMessages }, { status: 400 });
-    }
-
-    const { email } = result.data;
-
-    const randomEmail = `${email.split('@')[0]}+${crypto.randomInt(10000)}@${email.split('@')[1]}`;
-
+    const { email } = request.user;
     try {
-      const requestId = await walletService.requestSignUpEmailCode(randomEmail);
-      await createUser(randomEmail);
-      
-      return NextResponse.json({ email: randomEmail, requestId }, { status: 201 });
+      const requestId = await walletService.requestSignUpEmailCode(email);
+      return NextResponse.json({ email: email, requestId }, { status: 201 });
     } catch (error) {
       if (error instanceof HandCashApiError) {
         console.error('SDK Error during email code request:', error);
@@ -45,4 +26,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     console.error('Unexpected error:', error);
     return NextResponse.json({ message: 'An unexpected error occurred', errorCode: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
   }
-}
+}, false, false);

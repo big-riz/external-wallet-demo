@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { WalletService, Environments } from '@handcash/handcash-sdk';
-import { getUser } from '@/lib/db';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware/user-auth';
+
 import 'dotenv/config';
 
 const walletService = new WalletService({
@@ -9,17 +10,15 @@ const walletService = new WalletService({
   env: Environments.local,
 });
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withAuth(async (request: AuthenticatedRequest): Promise<NextResponse> => {
   try {
-    const body = await request.json();
-    const user = await getUser(body.email);
-    const authToken = user.auth_token;
-
+    const authToken = request.user.authToken as string;
     const account = walletService.getWalletAccountFromAuthToken(authToken);
     const { items } = await account.wallet.getPaymentHistory({ from: 0, to: 100 });
+
     return NextResponse.json(items, { status: 200 });
   } catch (error: any) {
     console.error(error.message);
     return NextResponse.json({ message: 'Failed to fetch transaction history' }, { status: 500 });
   }
-}
+}, true, false);

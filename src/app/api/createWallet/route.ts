@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { WalletService, Environments, Crypto, HandCashApiError } from '@handcash/handcash-sdk';
-import { updateUserAuthToken } from '@/lib/db';
-import { z } from 'zod';
+import { updateUserWalletCreated, clearAuthToken } from '@/lib/db';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/user-auth';
+import { z } from 'zod';
+
 
 const walletService = new WalletService({
   appId: process.env.HANDCASH_APP_ID as string,
@@ -11,8 +12,7 @@ const walletService = new WalletService({
 });
 
 const inputSchema = z.object({
-  verificationCode: z.string().min(1, 'Verification code is required'),
-  requestId: z.string().min(1, 'Request ID is required'),
+  alias: z.string().min(1, 'Alias is required'),
 });
 
 export const POST = withAuth(async (request: AuthenticatedRequest): Promise<NextResponse> => {
@@ -24,22 +24,29 @@ export const POST = withAuth(async (request: AuthenticatedRequest): Promise<Next
       return NextResponse.json({ message: 'Invalid input', details: errorMessages }, { status: 400 });
     }
 
-    const { verificationCode, requestId } = result.data;
+    const { alias } = result.data;
 
-    const keyPair = Crypto.generateAuthenticationKeyPair();
-    let isNewUser = false;
+
     try {
-      const result = await walletService.verifyEmailCode(requestId, verificationCode, keyPair.publicKey);
-      isNewUser = result.isNewUser;
+
+      if(request.user.walletId) {
+        return NextResponse.json({ message: 'Wallet already created', errorCode: 'WALLET_ALREADY_CREATED' }, { status: 400 });
+      }
+      const publicKey = Crypto.getPublicKeyFromPrivateKey(request.user.authToken as string);
+      const depositInfo = await walletService.createWalletAccount(publicKey, request.user.email, alias);
+      await updateUserWalletCreated(request.user.id, depositInfo.id);
+      return NextResponse.json(depositInfo, { status: 200 });
     } catch (error) {
       if (error instanceof HandCashApiError) {
-        console.error('SDK Error during email verification:', error);
-        return NextResponse.json({ message: 'Failed to verify email code', errorCode: 'EMAIL_VERIFICATION_FAILED' }, { status: 400 });
+        // TODO make a custom error message
+        if(error.message === "An account with this email already exists. Redirect the user to authorize your app instead") {
+          await clearAuthToken(request.user.id);
+        }
+        console.error('SDK Error during wallet creation:', error.message);
+        return NextResponse.json({ message: 'Failed to create wallet account', errorCode: 'WALLET_CREATION_FAILED' }, { status: 400 });
       }
       throw error;
     }
-    await updateUserAuthToken(request.user.id, keyPair.privateKey);
-    return NextResponse.json({ isNewUser }, { status: 200 });
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json({ message: 'An unexpected error occurred', errorCode: 'INTERNAL_SERVER_ERROR' }, { status: 500 });

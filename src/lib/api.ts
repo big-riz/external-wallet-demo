@@ -1,6 +1,9 @@
 import { toast } from 'react-toastify';
 import { Types } from '@handcash/handcash-sdk';
+import { User } from '@/lib/auth-context';
+
 const API_BASE_URL = '/api';
+const ADMIN_API_BASE_URL = '/api/admin';
 
 interface ApiResponse<T> {
   data?: T;
@@ -15,37 +18,14 @@ async function handleApiResponse<T>(response: Response): Promise<ApiResponse<T>>
   return { data: await response.json() };
 }
 
-export const apiService = {
-  async requestEmailCode(email: string): Promise<ApiResponse<{
-    email: string;
-    requestId: string;
-  }>> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/requestEmailCode`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email}),
-      });
-      return handleApiResponse(response);
-    } catch (error) {
-      toast.error('Failed to create wallet');
-      return { error: (error as Error).message };
-    }
-  },
+function getAuthHeaders(token: string) {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+}
 
-    async verifyEmailCode(data: { email: string; verificationCode: string; requestId: string; alias: string }): Promise<ApiResponse<{ authToken: string }>> {
-        try {
-        const response = await fetch(`${API_BASE_URL}/verifyEmailCode`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
-        return handleApiResponse(response);
-        } catch (error) {
-        toast.error('Failed to verify email code');
-        return { error: (error as Error).message };
-        }
-    },
+export const apiService = {
 
   async checkAliasAvailability(alias: string): Promise<ApiResponse<{ isAvailable: boolean }>> {
     try {
@@ -61,28 +41,106 @@ export const apiService = {
     }
   },
 
-  async adminLogin(password: string): Promise<ApiResponse<{ token: string }>> {
+  async requestEmailCode(token: string): Promise<ApiResponse<{
+    requestId: string;
+  }>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/adminLogin`, {
+      const response = await fetch(`${API_BASE_URL}/requestEmailCode`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        headers: getAuthHeaders(token),
       });
       return handleApiResponse(response);
     } catch (error) {
-      toast.error('Failed to login');
+      toast.error('Failed to request email code');
+      return { error: (error as Error).message };
+    }
+  },
+
+  async verifyEmailCode(token: string, data: { verificationCode: string; requestId: string }): Promise<ApiResponse<void>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/verifyEmailCode`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify(data),
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed to verify email code');
+      return { error: (error as Error).message };
+    }
+  },
+
+  async getUser(token: string): Promise<ApiResponse<User>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/user`, {
+        method: 'GET',
+        headers: getAuthHeaders(token),
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed to fetch user data');
+      return { error: (error as Error).message };
+    }
+  },
+
+  async createWallet(token: string, alias: string): Promise<ApiResponse<Types.DepositInfo>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/createWallet`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({ alias }),
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed to create account');
+      return { error: (error as Error).message };
+    }
+  },
+
+  async getUserBalances(token: string): Promise<ApiResponse<Array<Types.UserBalance>>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/userBalance`, {
+        method: 'GET',
+        headers: getAuthHeaders(token),
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed to fetch user balance');
+      return { error: (error as Error).message };
+    }
+  },
+
+  async getDepositInfo(token: string): Promise<ApiResponse<Types.DepositInfo>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/depositInfo`, {
+        method: 'GET',
+        headers: getAuthHeaders(token),
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed to fetch deposit info');
+      return { error: (error as Error).message };
+    }
+  },
+
+  async getTransactionHistory(token: string): Promise<ApiResponse<Array<Types.PaymentResult>>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/transactionHistory`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed to fetch transaction history');
       return { error: (error as Error).message };
     }
   },
 
   async getUsers(token: string): Promise<ApiResponse<Array<{ email: string; auth_token: string }>>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/users`, {
+      const response = await fetch(`${ADMIN_API_BASE_URL}/users`, {
         method: 'GET',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(token),
       });
       return handleApiResponse(response);
     } catch (error) {
@@ -93,60 +151,13 @@ export const apiService = {
 
   async deleteUser(email: string, token: string): Promise<ApiResponse<void>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${email}`, {
+      const response = await fetch(`${ADMIN_API_BASE_URL}/users/${email}`, {
         method: 'DELETE',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(token),
       });
       return handleApiResponse(response);
     } catch (error) {
       toast.error('Failed to delete user');
-      return { error: (error as Error).message };
-    }
-  },
-
-  async getDepositInfo(email: string): Promise<ApiResponse<{ id: string; alias: string; paymail: string; base58Address: string }>> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/depositInfo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-
-        body: JSON.stringify({ email }),
-      });
-      return handleApiResponse(response);
-    } catch (error: any) {
-      toast.error(error?.message);
-      return { error: (error as Error).message };
-    }
-  },
-  async getTransactionHistory(email: string): Promise<ApiResponse<Array<Types.PaymentResult>>>{
-    try {
-      const response = await fetch(`${API_BASE_URL}/transactionHistory`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-      return handleApiResponse(response);
-    } catch (error) {
-      toast.error('Failed to fetch transaction history');
-      return { error: (error as Error).message };
-    }
-  },
-
-  async getUserBalances(email: string): Promise<ApiResponse<Array<Types.UserBalance>>> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/userBalance`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      return handleApiResponse(response);
-    } catch (error) {
-      toast.error('Failed to fetch user balances');
       return { error: (error as Error).message };
     }
   },

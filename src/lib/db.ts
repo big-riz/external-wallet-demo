@@ -3,6 +3,15 @@ import { open, Database as SQLiteDatabase } from 'sqlite';
 
 let db: SQLiteDatabase | null = null;
 
+export type User = {
+  id: number;
+  email: string;
+  passwordHash: string;
+  isAdmin: boolean;
+  walletId: string | null;
+  authToken: string | null;
+}
+
 export async function getDb() {
   if (!db) {
     db = await open({
@@ -14,21 +23,29 @@ export async function getDb() {
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT UNIQUE NOT NULL,
-        auth_token TEXT
+        passwordHash TEXT NOT NULL,
+        authToken TEXT,
+        walletId TEXT,
+        isAdmin BOOLEAN DEFAULT 0
       )
     `);
   }
   return db;
 }
 
-export async function createUser(email: string) {
+export async function createUser(email: string, passwordHash: string) {
     const db = await getDb();
-    await db.run('INSERT INTO users (email) VALUES (?)', [email]);
+    await db.run('INSERT INTO users (email, passwordHash) VALUES (?, ?)', [email, passwordHash]);
 }
 
-export async function updateUserAuthToken(email: string, authToken: string) {
+export async function findUserByPassword(email: string, passwordHash: string) {
     const db = await getDb();
-    await db.run('UPDATE users SET auth_token = ? WHERE email = ?', [authToken, email]);
+    return db.get('SELECT * FROM users WHERE email = ? AND passwordHash = ?', [email, passwordHash]);
+}
+
+export async function updateUserAuthToken(id: number, authToken: string) {
+    const db = await getDb();
+    await db.run('UPDATE users SET authToken = ? WHERE id = ?', [authToken, id]);
 }
 
 export async function getUsers() {
@@ -36,17 +53,22 @@ export async function getUsers() {
   return db.all('SELECT * FROM users');
 }
 
-export async function getUser(email: string) {
+export async function getUser(id: number) {
   const db = await getDb();
-  return db.get('SELECT * FROM users WHERE email = ?', [email]);
+  return db.get('SELECT * FROM users WHERE id = ?', [id]);
 }
 
-export async function deleteUser(email: string) {
+export async function deleteUser(id: number) {
   const db = await getDb();
-  await db.run('DELETE FROM users WHERE email = ?', [email]);
+  await db.run('DELETE FROM users WHERE id = ?', [id]);
 }
 
-export async function clearAuthToken(email: string) {
+export async function clearAuthToken(id: number) {
     const db = await getDb();
-    await db.run('UPDATE users SET auth_token = NULL WHERE email = ?', [email]);
+    await db.run('UPDATE users SET authToken = NULL WHERE id = ?', [id]);
+}
+
+export async function updateUserWalletCreated(id: number, walletId: string) {
+    const db = await getDb();
+    await db.run('UPDATE users SET walletId = ? WHERE id = ?', [walletId, id]);
 }

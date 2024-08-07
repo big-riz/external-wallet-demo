@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Loader2 } from 'lucide-react';
-import { apiService } from '@/lib/api';
 
 interface UserBalanceProps {
-  email: string;
+  balances: UserBalance [];
 }
 
 interface UserBalance {
@@ -19,41 +17,14 @@ interface UserBalance {
   };
 }
 
-export function UserBalance({ email }: UserBalanceProps) {
-  const [balances, setBalances] = useState<UserBalance[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchBalances = async () => {
-      setIsLoading(true);
-      const response = await apiService.getUserBalances(email);
-      if (response.data) {
-        setBalances(response.data);
-        setError(null);
-      } else {
-        setError('Failed to fetch user balances');
-      }
-      setIsLoading(false);
-    };
-
-    fetchBalances();
-  }, [email]);
-
+export function UserBalance({ balances }: UserBalanceProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>User Balances</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="flex items-center space-x-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <p>Loading balances...</p>
-          </div>
-        ) : error ? (
-          <p className="text-red-500">{error}</p>
-        ) : balances.length > 0 ? (
+     { balances.length > 0 ? (
           <div className="space-y-4">
             {balances.map((balance, index) => (
               <div key={index} className="border-t pt-2 first:border-t-0 first:pt-0">
