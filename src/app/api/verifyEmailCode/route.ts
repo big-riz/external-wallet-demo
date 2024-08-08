@@ -1,23 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { WalletService, Environments, Crypto, HandCashApiError } from '@handcash/handcash-sdk';
+import { NextResponse } from 'next/server';
+import { Crypto, HandCashApiError } from '@handcash/handcash-sdk';
 import { updateUserAuthToken } from '@/lib/db';
 import { z } from 'zod';
-import 'dotenv/config';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware/user-auth';
+import { walletService
 
-const walletService = new WalletService({
-  appId: process.env.HANDCASH_APP_ID as string,
-  appSecret: process.env.HANDCASH_APP_SECRET as string,
-  env: Environments.local,
-});
-
+ } from '@/lib/handcash-client';
 const inputSchema = z.object({
-  email: z.string().email('Invalid email format'),
   verificationCode: z.string().min(1, 'Verification code is required'),
   requestId: z.string().min(1, 'Request ID is required'),
-  alias: z.string().min(1, 'Alias is required'),
 });
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withAuth(async (request: AuthenticatedRequest): Promise<NextResponse> => {
   try {
     const body = await request.json();
     const result = inputSchema.safeParse(body);
@@ -26,12 +20,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ message: 'Invalid input', details: errorMessages }, { status: 400 });
     }
 
-    const { email, verificationCode, requestId, alias } = result.data;
+    const { verificationCode, requestId } = result.data;
 
     const keyPair = Crypto.generateAuthenticationKeyPair();
-
+    let isNewUser = false;
     try {
-      await walletService.verifyEmailCode(requestId, verificationCode, keyPair.publicKey);
+      const result = await walletService.verifyEmailCode(requestId, verificationCode, keyPair.publicKey);
+      isNewUser = result.isNewUser;
     } catch (error) {
       if (error instanceof HandCashApiError) {
         console.error('SDK Error during email verification:', error);
@@ -39,22 +34,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
       throw error;
     }
-
-    try {
-      await walletService.createWalletAccount(keyPair.publicKey, email, alias);
-      await updateUserAuthToken(email, keyPair.privateKey);
-    } catch (error) {
-      if (error instanceof HandCashApiError) {
-        console.error('SDK Error during wallet creation:', error);
-        return NextResponse.json({ message: 'Failed to create wallet account', errorCode: 'WALLET_CREATION_FAILED' }, { status: 400 });
-      }
-      throw error;
-    }
-
-    // Return the private key as the authToken
-    return NextResponse.json({ authToken: keyPair.privateKey }, { status: 200 });
+    await updateUserAuthToken(request.user.id, keyPair.privateKey);
+    return NextResponse.json({ isNewUser }, { status: 200 });
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json({ message: 'An unexpected error occurred', errorCode: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
   }
-}
+}, false, false);

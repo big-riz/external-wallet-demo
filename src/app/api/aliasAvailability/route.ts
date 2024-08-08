@@ -1,45 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { WalletService, Environments, HandCashApiError } from '@handcash/handcash-sdk';
+import { HandCashApiError } from '@handcash/handcash-sdk';
 import { z } from 'zod';
 import 'dotenv/config';
+import { walletService } from '@/lib/handcash-client';
 
-const walletService = new WalletService({
-  appId: process.env.HANDCASH_APP_ID as string,
-  appSecret: process.env.HANDCASH_APP_SECRET as string,
-  env: Environments.local,
-});
-
+// Input validation schema
 const inputSchema = z.object({
   alias: z.string().min(1, 'Alias is required'),
 });
 
+// Error response helper function
+const createErrorResponse = (message: string, errorCode: string, status: number) => {
+  return NextResponse.json({ message, errorCode }, { status });
+};
+
+// Validate input
+const validateInput = (body: any) => {
+  const result = inputSchema.safeParse(body);
+  if (!result.success) {
+    const errorMessages = result.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
+    throw new Error(errorMessages);
+  }
+  return result.data;
+};
+
+// Check alias availability
+const checkAliasAvailability = async (alias: string) => {
+  try {
+    return await walletService.isAliasAvailable(alias);
+  } catch (error) {
+    if (error instanceof HandCashApiError) {
+      console.error('SDK Error during alias availability check:', error);
+      throw new Error('Failed to check alias availability');
+    }
+    throw error;
+  }
+};
+
+// Main handler function
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
     
-    const result = inputSchema.safeParse(body);
-    if (!result.success) {
-      const errorMessages = result.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
-      return NextResponse.json({ message: 'Invalid input', details: errorMessages }, { status: 400 });
-    }
+    // Validate input
+    const { alias } = validateInput(body);
 
-    const { alias } = result.data;
+    // Check alias availability
+    const isAvailable = await checkAliasAvailability(alias);
 
-    try {
-      const isAvailable = await walletService.isAliasAvailable(alias);
-      return NextResponse.json({ isAvailable }, { status: 200 });
-    } catch (error: any) {
-      if (error instanceof HandCashApiError) {
-        console.error('SDK Error during alias availability check:', error);
-        return NextResponse.json({ message: 'Failed to check alias availability', errorCode: 'ALIAS_CHECK_FAILED' }, { status: 400 });
-      }
-      throw error;
-    }
+    return NextResponse.json({ isAvailable }, { status: 200 });
   } catch (error: any) {
-    if (error.message === 'Invalid alias. The alias must be between 4 and 50 characters long and can only contain letters, numbers, hyphens, underscores, and periods.') {
-      return NextResponse.json({ message: error.message, errorCode: 'ALIAS_INVALID' }, { status: 400 });
+    // Handle known errors
+    if (error.message.includes('Invalid alias')) {
+      return createErrorResponse(error.message, 'ALIAS_INVALID', 400);
     }
+    if (error.message === 'Failed to check alias availability') {
+      return createErrorResponse(error.message, 'ALIAS_CHECK_FAILED', 400);
+    }
+    if (error.message.includes('Alias is required')) {
+      return createErrorResponse('Invalid input', error.message, 400);
+    }
+    
+    // Handle unexpected errors
     console.error('Unexpected error:', error);
-    return NextResponse.json({ message: 'An unexpected error occurred', errorCode: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
+    return createErrorResponse('An unexpected error occurred', 'INTERNAL_SERVER_ERROR', 500);
   }
 }
