@@ -75,3 +75,13 @@ type RouteHandler = (req: AuthenticatedRequest) => Promise<NextResponse>;
 export function withAuth(handler: RouteHandler, requireWallet = false, requireAdmin = false): RouteHandler {
   return (req: AuthenticatedRequest) => authMiddleware(req, requireWallet, requireAdmin, handler);
 }
+
+export function mapUser (user: User) {
+  return {
+    email: user.email,
+    id: user.id,
+    hasToken: !!user.authToken,
+    walletId: user.walletId,
+    isAdmin: user.isAdmin,
+  };
+}

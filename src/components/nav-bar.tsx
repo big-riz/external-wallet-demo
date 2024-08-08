@@ -24,6 +24,7 @@ const NavBar: React.FC = () => {
   const navItems = [
     { label: 'Home', href: '/' },
     { label: 'Profile', href: '/profile' },
+    { label: 'Users', href: '/users' },
   ];
 
   if (!token) {
