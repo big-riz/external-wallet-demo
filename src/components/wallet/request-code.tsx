@@ -62,7 +62,7 @@ export function RequestCode({ setEmail, setRequestId, setCurrentStep, email = ''
               </div>
             </form>
           </CardContent>
-          <CardFooter>
+        <CardFooter>
             <Button className="w-full" onClick={handleSubmit}>Create Wallet</Button>
           </CardFooter>
         </Card>

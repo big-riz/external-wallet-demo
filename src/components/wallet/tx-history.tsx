@@ -25,7 +25,6 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
                 <TableHead>Fiat Equivalent</TableHead>
                 <TableHead>Participant</TableHead>
                 <TableHead>Time</TableHead>
-                <TableHead>Note</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -44,7 +43,6 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
                     {tx.participants[0]?.alias || 'N/A'}
                   </TableCell>
                   <TableCell>{new Date(tx.time * 1000).toLocaleString()}</TableCell>
-                  <TableCell>{tx.note || 'N/A'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

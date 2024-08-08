@@ -12,6 +12,7 @@ export type User = {
   authToken: string | null;
 }
 
+
 export async function getDb() {
   if (!db) {
     db = await open({

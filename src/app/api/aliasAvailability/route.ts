@@ -2,12 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { WalletService, Environments, HandCashApiError } from '@handcash/handcash-sdk';
 import { z } from 'zod';
 import 'dotenv/config';
-
-const walletService = new WalletService({
-  appId: process.env.HANDCASH_APP_ID as string,
-  appSecret: process.env.HANDCASH_APP_SECRET as string,
-  env: Environments.local,
-});
+import { walletService } from '@/lib/handcash-client';
 
 const inputSchema = z.object({
   alias: z.string().min(1, 'Alias is required'),

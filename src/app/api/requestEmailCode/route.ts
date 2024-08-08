@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server';
-import { WalletService, Environments, HandCashApiError } from '@handcash/handcash-sdk';
+import { HandCashApiError } from '@handcash/handcash-sdk';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/user-auth';
-
-const walletService = new WalletService({
-  appId: process.env.HANDCASH_APP_ID as string,
-  appSecret: process.env.HANDCASH_APP_SECRET as string,
-  env: Environments.local,
-});
-
+import { walletService } from '@/lib/handcash-client';
 
 export const POST = withAuth(async (request: AuthenticatedRequest): Promise<NextResponse> => {
   try {

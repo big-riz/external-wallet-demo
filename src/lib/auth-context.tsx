@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { apiService } from '@/lib/api';
+import { Types } from '@handcash/handcash-sdk';
 
 export interface User {
   id: string;
@@ -10,6 +11,8 @@ export interface User {
   hasToken: boolean;
   walletId: string;
   isAdmin: boolean;
+  depositInfo?: Types.DepositInfo;
+  balances?: Types.UserBalance[];
 }
 
 interface AuthContextType {
@@ -20,13 +23,13 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-// List of paths that don't require authentication
 const publicPaths = ['/auth', '/forgot-password'];
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
@@ -44,10 +47,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to fetch user data:', error);
-      // If we fail to fetch user data, we should probably log the user out
       setToken(null);
       localStorage.removeItem('authToken');
       setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,8 +61,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (storedToken) {
         setToken(storedToken);
         await fetchUser(storedToken);
+      } else {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     initializeAuth();
@@ -78,6 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } else {
       localStorage.removeItem('authToken');
       setUser(null);
+      setIsLoading(false);
     }
   };
 

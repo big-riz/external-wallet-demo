@@ -10,6 +10,11 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+export type WalletInfo = {
+  balances?: Types.UserBalance[];
+  depositInfo?: Types.DepositInfo;
+};
+
 async function handleApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
   if (!response.ok) {
     const errorData = await response.json();
@@ -70,7 +75,7 @@ export const apiService = {
     }
   },
 
-  async getUser(token: string): Promise<ApiResponse<User>> {
+  async getUser(token: string): Promise<ApiResponse<User & WalletInfo>> {
     try {
       const response = await fetch(`${API_BASE_URL}/user`, {
         method: 'GET',
@@ -93,32 +98,6 @@ export const apiService = {
       return handleApiResponse(response);
     } catch (error) {
       toast.error('Failed to create account');
-      return { error: (error as Error).message };
-    }
-  },
-
-  async getUserBalances(token: string): Promise<ApiResponse<Array<Types.UserBalance>>> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/userBalance`, {
-        method: 'GET',
-        headers: getAuthHeaders(token),
-      });
-      return handleApiResponse(response);
-    } catch (error) {
-      toast.error('Failed to fetch user balance');
-      return { error: (error as Error).message };
-    }
-  },
-
-  async getDepositInfo(token: string): Promise<ApiResponse<Types.DepositInfo>> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/depositInfo`, {
-        method: 'GET',
-        headers: getAuthHeaders(token),
-      });
-      return handleApiResponse(response);
-    } catch (error) {
-      toast.error('Failed to fetch deposit info');
       return { error: (error as Error).message };
     }
   },

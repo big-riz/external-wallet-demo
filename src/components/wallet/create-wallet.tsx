@@ -15,7 +15,7 @@ enum Step {
 }
 
 interface CreateWalletProps {
-  requestId: string | null;
+  requestId: string;
   onWalletCreated: () => Promise<void>;
 }
 

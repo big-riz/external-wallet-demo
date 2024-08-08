@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server';
-import { WalletService, Environments, Crypto, HandCashApiError } from '@handcash/handcash-sdk';
+import { Crypto, HandCashApiError } from '@handcash/handcash-sdk';
 import { updateUserAuthToken } from '@/lib/db';
 import { z } from 'zod';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/user-auth';
+import { walletService
 
-const walletService = new WalletService({
-  appId: process.env.HANDCASH_APP_ID as string,
-  appSecret: process.env.HANDCASH_APP_SECRET as string,
-  env: Environments.local,
-});
-
+ } from '@/lib/handcash-client';
 const inputSchema = z.object({
   verificationCode: z.string().min(1, 'Verification code is required'),
   requestId: z.string().min(1, 'Request ID is required'),

@@ -36,7 +36,7 @@ const NavBar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex-shrink-0 text-2xl font-bold text-gray-800">
-              Logo
+              {process.env.NEXT_PUBLIC_APP_NAME}
             </Link>
           </div>
           <div className="hidden md:block">
