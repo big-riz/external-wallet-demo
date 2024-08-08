@@ -4,20 +4,21 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { usePathname, useRouter } from 'next/navigation';
 import { apiService } from '@/lib/api';
 import { Types } from '@handcash/handcash-sdk';
+import { UserBalance } from './db';
 
-export interface User {
-  id: string;
+export interface AppUser {
+  id: number;
   email: string;
   hasToken: boolean;
-  walletId: string;
+  walletId: string | null;
   isAdmin: boolean;
   depositInfo?: Types.DepositInfo;
-  balances?: Types.UserBalance[];
+  balances?: UserBalance[];
 }
 
 interface AuthContextType {
   token: string | null;
-  user: User | null;
+  user: AppUser | null;
   setToken: (token: string | null) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -34,7 +35,7 @@ const publicPaths = ['/auth', '/forgot-password'];
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -99,7 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>; // Or a more sophisticated loading component
+    return <div>Loading...</div>;
   }
 
   return (

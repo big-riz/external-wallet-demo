@@ -34,10 +34,9 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
                   <TableCell>{tx.type}</TableCell>
                   <TableCell>
                     {tx.units} {tx.currency.code}
-                    <img src={tx.currency.logoUrl} alt={tx.currency.code} className="w-4 h-4 inline ml-1" />
                   </TableCell>
                   <TableCell>
-                    {tx.fiatEquivalent.currencyCode} {tx.fiatEquivalent.currencyCode}
+                    {tx.fiatEquivalent.units} {tx.fiatEquivalent.currencyCode}
                   </TableCell>
                   <TableCell>
                     {tx.participants[0]?.alias || 'N/A'}

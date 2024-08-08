@@ -31,9 +31,20 @@ export default function RootLayout({
         )}
       >
         <AuthProvider>
-        <NavBar />
+          <NavBar />
           {children}
-          <ToastContainer />
+          <ToastContainer
+            position="bottom-left"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
         </AuthProvider>
       </body>
     </html>

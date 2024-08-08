@@ -16,11 +16,11 @@ enum Step {
 
 interface CreateWalletProps {
   requestId: string;
-  onWalletCreated: () => Promise<void>;
+  onWalletCreated: () => void;
 }
 
-export function CreateWallet({ requestId }: CreateWalletProps) {
-  const { user, token, refreshUser } = useAuth();
+export function CreateWallet({ requestId, onWalletCreated }: CreateWalletProps) {
+  const { user, token } = useAuth();
   const [step, setStep] = useState<Step>(Step.VerifyEmail);
   const [verificationCode, setVerificationCode] = useState('');
   const [paymail, setPaymail] = useState('');
@@ -63,9 +63,15 @@ export function CreateWallet({ requestId }: CreateWalletProps) {
       }
 
       setIsCheckingPaymail(true);
-      const response = await apiService.checkAliasAvailability(paymailToCheck);
-      setIsPaymailAvailable(response.data?.isAvailable ?? false);
-      setIsCheckingPaymail(false);
+      try {
+        const response = await apiService.checkAliasAvailability(paymailToCheck);
+        setIsPaymailAvailable(response.data?.isAvailable ?? false);
+      } catch (error) {
+        console.error('Error checking paymail availability:', error);
+        setIsPaymailAvailable(false);
+      } finally {
+        setIsCheckingPaymail(false);
+      }
     }, 300),
     []
   );
@@ -102,10 +108,12 @@ export function CreateWallet({ requestId }: CreateWalletProps) {
       error: 'Failed to create wallet'
     });
 
-    const response = await createWalletPromise;
-    await refreshUser();
-
-
+    try {
+      const response = await createWalletPromise;
+      onWalletCreated(); // Call the callback to refresh the parent component
+    } catch (error) {
+      console.error('Error creating wallet:', error);
+    }
   };
 
   return (
@@ -137,27 +145,30 @@ export function CreateWallet({ requestId }: CreateWalletProps) {
           <div className="space-y-4">
             <div>
               <Label htmlFor="paymail">Paymail</Label>
-              <Input 
-                id="paymail" 
-                type="text" 
-                placeholder="Enter paymail" 
-                value={paymail}
-                onChange={(e) => setPaymail(e.target.value)}
-              />
-              {isCheckingPaymail && <p className="text-sm text-gray-500">Checking availability...</p>}
-              {!isCheckingPaymail && isPaymailAvailable !== null && (
-                <p className={`text-sm ${isPaymailAvailable ? 'text-green-500' : 'text-red-500'} flex items-center mt-1`}>
-                  {isPaymailAvailable ? (
-                    <>
-                      <Check size={16} className="mr-1" /> Paymail is available
-                    </>
-                  ) : (
-                    <>
-                      <X size={16} className="mr-1" /> Paymail is unavailable
-                    </>
+              <div className="relative">
+                <Input 
+                  id="paymail" 
+                  type="text" 
+                  placeholder="Enter paymail" 
+                  value={paymail}
+                  onChange={(e) => setPaymail(e.target.value)}
+                  className="pr-10"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  {isCheckingPaymail && (
+                    <svg className="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                   )}
-                </p>
-              )}
+                  {!isCheckingPaymail && isPaymailAvailable === true && (
+                    <Check className="h-5 w-5 text-green-500" />
+                  )}
+                  {!isCheckingPaymail && isPaymailAvailable === false && (
+                    <X className="h-5 w-5 text-red-500" />
+                  )}
+                </div>
+              </div>
             </div>
             <Button className="w-full" onClick={handleCreateWallet} disabled={!isPaymailAvailable}>Create Wallet</Button>
           </div>

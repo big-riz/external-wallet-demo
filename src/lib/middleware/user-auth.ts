@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { getUser, User } from '@/lib/db'
+import { refreshWalletInfo } from '@/lib/handcash-client'
+import { AppUser } from '@/lib/auth-context'
 
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
@@ -43,11 +45,18 @@ export async function authMiddleware(
       return NextResponse.json({ error: 'Invalid token payload' }, { status: 401 });
     }
 
-    const user = await getUser(decoded.id);
+    let user = await getUser(decoded.id);
 
     if (!user) {
       console.log('User not found', decoded);
       return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
+    if(user.authToken){
+      try {
+        user = await refreshWalletInfo(user.id, user.authToken) as User;
+      } catch (error) {
+        console.error('Failed to refresh wallet info:', error);
+      }
     }
 
     request.user = user;
@@ -76,12 +85,14 @@ export function withAuth(handler: RouteHandler, requireWallet = false, requireAd
   return (req: AuthenticatedRequest) => authMiddleware(req, requireWallet, requireAdmin, handler);
 }
 
-export function mapUser (user: User) {
+export function mapUser (user: User): AppUser {
   return {
     email: user.email,
     id: user.id,
     hasToken: !!user.authToken,
     walletId: user.walletId,
     isAdmin: user.isAdmin,
+    depositInfo: user.depositInfo,
+    balances: user.balances,
   };
 }

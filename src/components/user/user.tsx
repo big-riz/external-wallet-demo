@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { apiService } from '@/lib/api';
 import { UserBalance } from '@/components/wallet/balance';
@@ -13,9 +13,8 @@ import { CreateWallet } from '../wallet/create-wallet';
 import { toast } from 'react-toastify';
 import { DepositInfo } from '@/components/wallet/deposit-info';
 
-
 export function UserPage() {
-  const { user, token } = useAuth();
+  const { user, token, refreshUser } = useAuth();
   const [txHistory, setTxHistory] = useState<Types.PaymentResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,31 +22,31 @@ export function UserPage() {
   const [emailCodeRequestId, setEmailCodeRequestId] = useState<string | null>(null);
   const router = useRouter();
 
+  const fetchUserData = useCallback(async () => {
+    if (!user || !user.walletId || !token) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const historyResponse = await apiService.getTransactionHistory(token);
+      setTxHistory(historyResponse.data || []);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching tx history data:', err);
+      setError('An error occurred while fetching user data');
+    }
+    setIsLoading(false);
+  }, [user, token]);
+
   useEffect(() => {
     if (!user || !token) {
       router.push('/auth');
       return;
     }
 
-    const fetchUserData = async () => {
-      if (!user.walletId) {
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        const historyResponse = await apiService.getTransactionHistory(token)
-        setTxHistory(historyResponse.data || []);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching tx history data:', err);
-        setError('An error occurred while fetching user data');
-      }
-      setIsLoading(false);
-    };
-
     fetchUserData();
-  }, [user, token, router]);
+  }, [user, token, router, fetchUserData]);
 
   const handleVerifyEmail = async () => {
     if (!token) {
@@ -68,6 +67,13 @@ export function UserPage() {
       console.error('Error requesting email code:', error);
       toast.error('Failed to request email verification');
     }
+  };
+
+  const handleWalletCreated = async () => {
+    await refreshUser(); // Refresh user data in auth context
+    setShowCreateWallet(false); // Hide the create wallet form
+    fetchUserData(); // Fetch updated user data
+    toast.success('Wallet created successfully!');
   };
 
   if (!user || !token) {
@@ -98,7 +104,7 @@ export function UserPage() {
 
       {!user.walletId && !showCreateWallet && (
         <div className="mt-4">
-          <p>You don't have a wallet yet.</p>
+          <p>You don&apos;t have a wallet yet.</p>
           <Button onClick={handleVerifyEmail} className="mt-2">
             Verify Email
           </Button>
@@ -107,7 +113,10 @@ export function UserPage() {
 
       {showCreateWallet && (
         <div className="mt-4">
-          <CreateWallet requestId={emailCodeRequestId as string} />
+          <CreateWallet 
+            requestId={emailCodeRequestId as string} 
+            onWalletCreated={handleWalletCreated}
+          />
         </div>
       )}
 
@@ -117,13 +126,13 @@ export function UserPage() {
             <div className="mt-4">Loading user data...</div>
           ) : error ? (
             <div className="mt-4 text-red-500">Error: {error}</div>
-          ) : user ? (
+          ) : (
             <div className="mt-8 space-y-8">
               <DepositInfo depositInfo={user.depositInfo} />
               <UserBalance balances={user.balances} />
               <TransactionHistory transactions={txHistory} />
             </div>
-          ) : null}
+          )}
         </>
       )}
     </div>

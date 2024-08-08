@@ -1,6 +1,6 @@
 import { toast } from 'react-toastify';
 import { Types } from '@handcash/handcash-sdk';
-import { User } from '@/lib/auth-context';
+import { AppUser } from '@/lib/auth-context';
 
 const API_BASE_URL = '/api';
 const ADMIN_API_BASE_URL = '/api/admin';
@@ -10,10 +10,6 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-export type WalletInfo = {
-  balances?: Types.UserBalance[];
-  depositInfo?: Types.DepositInfo;
-};
 
 async function handleApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
   if (!response.ok) {
@@ -75,7 +71,7 @@ export const apiService = {
     }
   },
 
-  async getUser(token: string): Promise<ApiResponse<User & WalletInfo>> {
+  async getUser(token: string): Promise<ApiResponse<AppUser>> {
     try {
       const response = await fetch(`${API_BASE_URL}/user`, {
         method: 'GET',
@@ -115,7 +111,7 @@ export const apiService = {
     }
   },
 
-  async getUsers(token: string): Promise<ApiResponse<Array<{ email: string; auth_token: string }>>> {
+  async getUsers(token: string): Promise<ApiResponse<Array<AppUser>>> {
     try {
       const response = await fetch(`${ADMIN_API_BASE_URL}/users`, {
         method: 'GET',
