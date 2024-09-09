@@ -32,7 +32,6 @@ export const POST = withAuth(async (request: AuthenticatedRequest): Promise<Next
       return NextResponse.json(depositInfo, { status: 200 });
     } catch (error) {
       if (error instanceof HandCashApiError) {
-        // TODO make a custom error message
         if(error.message === "An account with this email already exists. Redirect the user to authorize your app instead") {
           await clearAuthToken(request.user.id);
         }

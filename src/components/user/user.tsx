@@ -128,7 +128,7 @@ export function UserPage() {
             <div className="mt-4 text-red-500">Error: {error}</div>
           ) : (
             <div className="mt-8 space-y-8">
-              <DepositInfo depositInfo={user.depositInfo} />
+               {user.depositInfo && <DepositInfo depositInfo={user.depositInfo} />}
               <UserBalance balances={user.balances} />
               <TransactionHistory transactions={txHistory} />
             </div>

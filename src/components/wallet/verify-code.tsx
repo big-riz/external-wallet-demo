@@ -5,18 +5,18 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { toast } from 'react-toastify';
 import { apiService } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 
 interface VerifyCodeProps {
   email: string;
   requestId: string;
-  setCurrentStep: (step: number) => void;
-  setIsNewUser: (isNewUser: boolean) => void;
   resetState: () => void;
 }
 
-export function VerifyCode({ email, requestId, setCurrentStep, setIsNewUser, resetState }: VerifyCodeProps) {
+export function VerifyCode({ email, requestId, resetState }: VerifyCodeProps) {
   const [verificationCode, setVerificationCode] = useState('');
   const [attemptCount, setAttemptCount] = useState(0);
+  const { token } = useAuth();
 
   const handleSetVerificationCode = (event: React.ChangeEvent<HTMLInputElement>) => {
     setVerificationCode(event.target.value);
@@ -29,15 +29,12 @@ export function VerifyCode({ email, requestId, setCurrentStep, setIsNewUser, res
     }
 
     try {
-      const response = await apiService.verifyEmailCode({
-        email,
+      const response = await apiService.verifyEmailCode(token as string, {
         verificationCode,
         requestId,
       });
 
       if (response.data) {
-        setIsNewUser(response.data.isNewUser);
-        setCurrentStep(response.data.isNewUser ? 3 : 4);
         toast.success('Code verified successfully!');
       }
     } catch (error) {

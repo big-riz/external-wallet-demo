@@ -2,6 +2,7 @@ import React from 'react';
 import QRCode from 'react-qr-code';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { toast } from 'react-toastify';
 import { Button } from "@/components/ui/button";
 import { Copy } from 'lucide-react';
 
@@ -19,7 +20,7 @@ interface DepositInfoProps {
 export function DepositInfo({ depositInfo }: DepositInfoProps) {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // You might want to add a toast notification here
+    toast.success('Copied to clipboard!');
   };
 
   return (

@@ -6,18 +6,19 @@ import { Button } from "@/components/ui/button"
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { apiService } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 
-export function RequestCode({ setEmail, setRequestId, setCurrentStep, email = '' }: { 
+export function RequestCode({ setEmail, setRequestId, email = '' }: { 
   setEmail: (email: string) => void,
   setRequestId: (requestId: string) => void,
-  setCurrentStep: (step: number) => void,
   email: string
 }) {
+  const { token } = useAuth();
   const [inputEmail, setInputEmail] = useState(email);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const createAccountPromise = apiService.requestEmailCode(inputEmail);
+    const createAccountPromise = apiService.requestEmailCode(token || '');
   
     toast.promise(createAccountPromise, {
       pending: 'Creating external wallet...',
@@ -27,9 +28,8 @@ export function RequestCode({ setEmail, setRequestId, setCurrentStep, email = ''
 
     const response = await createAccountPromise;
     if (response.data) {
-      setEmail(response.data.email);
+      setEmail(inputEmail);
       setRequestId(response.data.requestId);
-      setCurrentStep(2);
     }
   };
 

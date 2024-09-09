@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { toast } from 'react-toastify';
 import { debounce } from 'lodash';
 import { Check, X } from 'lucide-react';
@@ -27,13 +27,19 @@ export function CreateWallet({ requestId, onWalletCreated }: CreateWalletProps) 
   const [isPaymailAvailable, setIsPaymailAvailable] = useState<boolean | null>(null);
   const [isCheckingPaymail, setIsCheckingPaymail] = useState(false);
 
-  useEffect(() => {
-    if (user && user.email && step === Step.SelectPaymail) {
-      const suggestedPaymail = user.email.split('@')[0];
-      setPaymail(suggestedPaymail);
-      checkPaymailAvailability(suggestedPaymail);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const checkPaymailAvailability = useCallback(debounce(async (paymailToCheck: string) => {
+    setIsCheckingPaymail(true);
+    try {
+      const response = await apiService.checkAliasAvailability(paymailToCheck);
+      setIsPaymailAvailable(response.data?.isAvailable ?? false);
+    } catch (error) {
+      console.error('Error checking paymail availability:', error);
+      setIsPaymailAvailable(false);
+    } finally {
+      setIsCheckingPaymail(false);
     }
-  }, [user, step]);
+  }, 300), []);
 
   const handleVerifyEmail = async () => {
     if (!token || !requestId) {
@@ -55,33 +61,24 @@ export function CreateWallet({ requestId, onWalletCreated }: CreateWalletProps) 
     }
   };
 
-  const checkPaymailAvailability = useCallback(
-    debounce(async (paymailToCheck: string) => {
-      if (paymailToCheck.length === 0) {
-        setIsPaymailAvailable(null);
-        return;
-      }
-
-      setIsCheckingPaymail(true);
-      try {
-        const response = await apiService.checkAliasAvailability(paymailToCheck);
-        setIsPaymailAvailable(response.data?.isAvailable ?? false);
-      } catch (error) {
-        console.error('Error checking paymail availability:', error);
-        setIsPaymailAvailable(false);
-      } finally {
-        setIsCheckingPaymail(false);
-      }
-    }, 300),
-    []
-  );
+  useEffect(() => {
+    if (user?.email && step === Step.SelectPaymail) {
+      const suggestedPaymail = user.email.split('@')[0];
+      setPaymail(suggestedPaymail);
+      checkPaymailAvailability(suggestedPaymail);
+    }
+  }, [user, step, checkPaymailAvailability]);
 
   useEffect(() => {
-    if (paymail && step === Step.SelectPaymail) {
-      checkPaymailAvailability(paymail);
-    } else {
-      setIsPaymailAvailable(null);
-    }
+    const delayedCheck = setTimeout(() => {
+      if (paymail && step === Step.SelectPaymail) {
+        checkPaymailAvailability(paymail);
+      } else {
+        setIsPaymailAvailable(null);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayedCheck);
   }, [paymail, step, checkPaymailAvailability]);
 
   const handleCreateWallet = async () => {
@@ -109,8 +106,8 @@ export function CreateWallet({ requestId, onWalletCreated }: CreateWalletProps) 
     });
 
     try {
-      const response = await createWalletPromise;
-      onWalletCreated(); // Call the callback to refresh the parent component
+      await createWalletPromise;
+      onWalletCreated();
     } catch (error) {
       console.error('Error creating wallet:', error);
     }
@@ -130,15 +127,17 @@ export function CreateWallet({ requestId, onWalletCreated }: CreateWalletProps) 
           <div className="space-y-4">
             <div>
               <Label htmlFor="verification-code">Verification Code</Label>
-              <Input 
-                id="verification-code" 
-                type="text" 
-                placeholder="Enter code" 
+              <Input
+                id="verification-code"
+                type="text"
+                placeholder="Enter code"
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
               />
             </div>
-            <Button className="w-full" onClick={handleVerifyEmail}>Verify Email</Button>
+            <Button className="w-full" onClick={handleVerifyEmail}>
+              Verify Email
+            </Button>
           </div>
         )}
         {step === Step.SelectPaymail && (
@@ -146,19 +145,35 @@ export function CreateWallet({ requestId, onWalletCreated }: CreateWalletProps) 
             <div>
               <Label htmlFor="paymail">Paymail</Label>
               <div className="relative">
-                <Input 
-                  id="paymail" 
-                  type="text" 
-                  placeholder="Enter paymail" 
+                <Input
+                  id="paymail"
+                  type="text"
+                  placeholder="Enter paymail"
                   value={paymail}
                   onChange={(e) => setPaymail(e.target.value)}
                   className="pr-10"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   {isCheckingPaymail && (
-                    <svg className="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 text-gray-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                   )}
                   {!isCheckingPaymail && isPaymailAvailable === true && (
@@ -170,7 +185,13 @@ export function CreateWallet({ requestId, onWalletCreated }: CreateWalletProps) 
                 </div>
               </div>
             </div>
-            <Button className="w-full" onClick={handleCreateWallet} disabled={!isPaymailAvailable}>Create Wallet</Button>
+            <Button
+              className="w-full"
+              onClick={handleCreateWallet}
+              disabled={!isPaymailAvailable}
+            >
+              Create Wallet
+            </Button>
           </div>
         )}
       </CardContent>
