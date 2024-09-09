@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { HandCashApiError } from '@handcash/handcash-sdk';
 import { z } from 'zod';
-import 'dotenv/config';
 import { walletService } from '@/lib/handcash-client';
 
 // Input validation schema
