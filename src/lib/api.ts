@@ -136,4 +136,19 @@ export const apiService = {
       return { error: (error as Error).message };
     }
   },
+
+  async makePayment(token: string, destination: string, amount: number): Promise<ApiResponse<Types.PaymentResult>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/pay`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({ destination, amount }),
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed to process payment');
+      return { error: (error as Error).message };
+    }
+  },
+
 };

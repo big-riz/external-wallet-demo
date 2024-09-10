@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { CreateWallet } from '../wallet/create-wallet';
 import { toast } from 'react-toastify';
 import { DepositInfo } from '@/components/wallet/deposit-info';
+import { SendPayment } from '@/components/wallet/pay';
 
 export function UserPage() {
   const { user, token, refreshUser } = useAuth();
@@ -47,6 +48,11 @@ export function UserPage() {
 
     fetchUserData();
   }, [user, token, router, fetchUserData]);
+
+  const handleRefreshUser = async () => {
+    await refreshUser();
+    fetchUserData();
+  };
 
   const handleVerifyEmail = async () => {
     if (!token) {
@@ -128,6 +134,7 @@ export function UserPage() {
             <div className="mt-4 text-red-500">Error: {error}</div>
           ) : (
             <div className="mt-8 space-y-8">
+              <SendPayment refreshUser={handleRefreshUser} />
                {user.depositInfo && <DepositInfo depositInfo={user.depositInfo} />}
               <UserBalance balances={user.balances} />
               <TransactionHistory transactions={txHistory} />
