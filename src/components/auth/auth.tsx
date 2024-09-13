@@ -1,64 +1,35 @@
 'use client';
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
 import { toast } from 'react-toastify';
-import CryptoJS from 'crypto-js';
+import { useFormState } from 'react-dom';
+import { signUp } from '@/app/actions/auth/signUpAction';
+import { signIn } from '@/app/actions/auth/signInAction';
 
-const hashPassword = (password: string) => {
-  return CryptoJS.SHA256(password).toString();
-};
-
-const signIn = async (email: string, hashedPassword: string): Promise<{ token: string, user: any }> => {
-  const response = await fetch('/api/auth/signIn', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password: hashedPassword }),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to sign in');
-  }
-  return response.json();
-};
-
-const signUp = async (email: string, hashedPassword: string): Promise<{ token: string, user: any }> => {
-  const response = await fetch('/api/auth/signUp', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password: hashedPassword }),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to sign up');
-  }
-  return response.json();
-};
+type AuthState = {
+  error?: string;
+  errors?: Record<string, string[]>;
+} | null;
 
 export function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const router = useRouter();
-  const { setToken } = useAuth();
+  const [signUpState, signUpAction] = useFormState<AuthState, FormData>(signUp, null);
+  const [signInState, signInAction] = useFormState<AuthState, FormData>(signIn, null);
+  const handleSubmit = isSignUp ? signUpAction : signInAction;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const hashedPassword = hashPassword(password);
-      const { token, user } = await (isSignUp ? signUp(email, hashedPassword) : signIn(email, hashedPassword));
-      setToken(token);
-      toast.success(isSignUp ? 'Account created successfully!' : 'Signed in successfully!');
-      router.push('/'); // Redirect to dashboard or home page
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'An error occurred');
+  useEffect(() => {
+    const state = isSignUp ? signUpState : signInState;
+    if (state?.error) {
+      toast.error(state.error);
+    } else if (state !== null && !state.error) {
+      router.push('/');
     }
-  };
+  }, [signUpState, signInState, isSignUp, router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
@@ -68,16 +39,15 @@ export function AuthPage() {
             <CardTitle>{isSignUp ? 'Create an Account' : 'Sign In'}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit}>
+            <form action={handleSubmit}>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="john@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -85,9 +55,8 @@ export function AuthPage() {
                   <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
+                    name="password"
                     type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>

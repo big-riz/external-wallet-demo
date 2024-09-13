@@ -1,9 +1,7 @@
 'use client';
 import React from 'react';
-import { useProtectedRoute } from '@/lib/auth-context';
 
 export default function Home() {
-  useProtectedRoute();
 
   return (
     <div className="flex flex-col min-h-screen">

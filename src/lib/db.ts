@@ -71,10 +71,11 @@ export async function createUser(email: string, passwordHash: string) {
     await db.run('INSERT INTO users (email, passwordHash) VALUES (?, ?)', [email, passwordHash]);
 }
 
-export async function findUserByPassword(email: string, passwordHash: string) {
-    const db = await getDb();
-    return db.get('SELECT * FROM users WHERE email = ? AND passwordHash = ?', [email, passwordHash]);
+export async function findUserByEmail(email: string) {
+  const db = await getDb();
+  return db.get('SELECT * FROM users WHERE email = ?', [email]);
 }
+
 
 export async function updateUserAuthToken(id: number, authToken: string) {
     const db = await getDb();
@@ -97,7 +98,6 @@ export async function updateUserWalletCreated(id: number, walletId: string) {
 }
 
 export async function insertOrUpdateUserBalances(userId: number, balances: Types.UserBalance[]) {
-  console.log({ userId, balances });
   const db = await getDb();
   await db.run('BEGIN TRANSACTION');
   try {

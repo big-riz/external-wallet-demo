@@ -1,10 +1,7 @@
-'use client';
 import React from 'react';
-import { UserPage } from '@/components/user/user';
-import { useProtectedRoute } from '@/lib/auth-context';
+import UserPage from '@/components/user/user';
 
 export default function Home() {
-  useProtectedRoute();
 
   return (
     <div className="flex flex-col min-h-screen">

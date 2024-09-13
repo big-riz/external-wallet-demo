@@ -1,19 +1,19 @@
+// src/components/NavBar.tsx
 'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
 import { Button } from "@/components/ui/button";
 import { Menu, X } from 'lucide-react';
+import { logoutAction } from '@/app/actions/logoutAction';
 
 const NavBar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { logout, token } = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logoutAction();
     router.push('/auth');
   };
 
@@ -24,12 +24,7 @@ const NavBar: React.FC = () => {
   const navItems = [
     { label: 'Home', href: '/' },
     { label: 'Profile', href: '/profile' },
-    { label: 'Users', href: '/users' },
   ];
-
-  if (!token) {
-    return null; // Don't render the NavBar if the user is not authenticated
-  }
 
   return (
     <nav className="bg-white shadow-md">

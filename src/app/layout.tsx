@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils"
 import "./globals.css";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { AuthProvider } from "@/lib/auth-context";
 import NavBar from "@/components/nav-bar";
 
 const fontSans = FontSans({
@@ -30,7 +29,6 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        <AuthProvider>
           <NavBar />
           {children}
           <ToastContainer
@@ -45,7 +43,6 @@ export default function RootLayout({
             pauseOnHover
             theme="light"
           />
-        </AuthProvider>
       </body>
     </html>
   );
