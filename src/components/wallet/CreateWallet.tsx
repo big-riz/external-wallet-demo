@@ -30,7 +30,7 @@ export function CreateWallet({ requestId, onWalletCreated }: CreateWalletProps) 
         const formData = new FormData();
         formData.append('alias', aliasToCheck);
         const result = await checkAliasAvailabilityAction(formData);
-        setIsAliasAvailable(result.isAvailable);
+        setIsAliasAvailable(result);
       } catch (error) {
         console.error('Error checking alias availability:', error);
         setIsAliasAvailable(false);

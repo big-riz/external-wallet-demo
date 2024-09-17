@@ -12,6 +12,7 @@ import debounce from 'lodash.debounce';
 import { Check, X } from 'lucide-react';
 import { checkAliasAvailabilityAction } from '@/app/actions/checkAliasAvailabilityAction';
 import { createWalletAction } from '@/app/actions/createWalletAction';
+import { useWallet } from '@/app/context/WalletContext';
 
 interface VerifyEmailFormProps {
   requestId: string;
@@ -24,6 +25,7 @@ export function VerifyEmailForm({ requestId }: VerifyEmailFormProps) {
   const [isAliasAvailable, setIsAliasAvailable] = useState<boolean | null>(null);
   const [isCheckingAlias, setIsCheckingAlias] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { getAllInfo } = useWallet();
 
   // Alias availability check with debounce
   const checkAliasAvailability = useCallback(
@@ -66,8 +68,9 @@ export function VerifyEmailForm({ requestId }: VerifyEmailFormProps) {
           requestId,
         });
         toast.success('Wallet created successfully!');
+        await getAllInfo();
         // Refresh the page to reflect updated user data
-        router.refresh();
+        router.push('/profile');
       } catch (error) {
         console.error('Error creating wallet:', error);
         toast.error('Failed to create wallet. Please try again.');

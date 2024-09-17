@@ -19,14 +19,9 @@ interface UserPageClientProps {
   txHistoryError: boolean;
 }
 
-export default function UserPageClient({ user, txHistory, txHistoryError }: UserPageClientProps) {
+export default function UserPageClient({ user, txHistory }: UserPageClientProps) {
   const { isWalletConnected, balances, depositInfo } = useWallet();
 
-  useEffect(() => {
-    if (txHistoryError) {
-      toast.error('Error fetching transaction history');
-    }
-  }, [txHistoryError]);
 
   if (!isWalletConnected) {
     return (

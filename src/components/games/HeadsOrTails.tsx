@@ -12,15 +12,15 @@ import styles from './HeadsOrTails.module.css'
 import { useWallet } from '@/app/context/WalletContext';
 
 const Coin = ({ isFlipping, result }: { isFlipping: boolean; result: 'Heads' | 'Tails' | null }) => (
-    <div className={`${styles.coin} ${isFlipping ? styles.flipping : ''} ${result ? styles[result.toLowerCase()] : ''}`}>
-      <div className={`${styles.side} ${styles.heads}`}>
-        <Image src="/Heads.webp" alt="Heads" width={150} height={150} />
-      </div>
-      <div className={`${styles.side} ${styles.tails}`}>
-        <Image src="/Tails.webp" alt="Tails" width={150} height={150} />
-      </div>
+  <div className={`${styles.coin} ${isFlipping ? styles.flipping : ''} ${result ? styles[result.toLowerCase()] : ''}`}>
+    <div className={`${styles.side} ${styles.heads}`}>
+      <Image src="/Heads.webp" alt="Heads" width={150} height={150} />
     </div>
-  )
+    <div className={`${styles.side} ${styles.tails}`}>
+      <Image src="/Tails.webp" alt="Tails" width={150} height={150} />
+    </div>
+  </div>
+)
 
 const DotsLoader = () => (
   <span className={styles.loaderDots}>
@@ -29,7 +29,6 @@ const DotsLoader = () => (
     <span></span>
   </span>
 );
-  
 
 export default function HeadsOrTailsGame() {
   const [choice, setChoice] = useState<'Heads' | 'Tails'>('Heads');
@@ -39,7 +38,6 @@ export default function HeadsOrTailsGame() {
   const [playerResults, setPlayerResults] = useState<any>({});
   const [isFlipping, setIsFlipping] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [currentSide, setCurrentSide] = useState<'Heads' | 'Tails'>('Heads');
   const [gameId, setGameId] = useState<number | null>(null);
   const [randomSeedHash, setRandomSeedHash] = useState<string>('');
   const [isPending, startTransition] = useTransition();
@@ -92,48 +90,60 @@ export default function HeadsOrTailsGame() {
     setResult(null);
     setFlipResult(null);
 
+    // Start the coin flip animation immediately
+    const flipDuration = 1000; // 1 second flip animation
+    const flipStartTime = Date.now();
+
     try {
-      setIsFlipping(true);
-      const betResult = await makeBet(formData);
-      const isWin = betResult.playerSelection === betResult.result;
-    
-      // Set the flip result after a short delay to ensure the animation starts
-      setTimeout(() => {
-        setFlipResult(betResult.result as 'Heads' | 'Tails');
-      }, 50);
+      // Make the bet in the background while the animation is playing
+      const betPromise = makeBet(formData);
 
-      // Delay setting the result and showing confetti until after the animation
-      setTimeout(() => {
-        setResult({
-          message: isWin
-            ? `You won $${Number(betResult.wagerPayoutAmount).toFixed(3)}!`
-            : `You lost $${Number(betResult.wagerAmount).toFixed(2)}.`,
-          isWin,
-        });
+      // Animate the coin flip
+      const animateCoin = () => {
+        const elapsedTime = Date.now() - flipStartTime;
+        if (elapsedTime < flipDuration) {
+          // Continue the flipping animation
+          requestAnimationFrame(animateCoin);
+        } else {
+          // Animation is complete, now we can set the final result
+          betPromise.then((betResult) => {
+            const isWin = betResult.playerSelection === betResult.result;
+            setFlipResult(betResult.result as 'Heads' | 'Tails');
+            setResult({
+              message: isWin
+                ? `You won $${Number(betResult.wagerPayoutAmount).toFixed(3)}!`
+                : `You lost $${Number(betResult.wagerAmount).toFixed(2)}.`,
+              isWin,
+            });
 
-        if (isWin) {
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 5000);
+            if (isWin) {
+              setShowConfetti(true);
+              setTimeout(() => setShowConfetti(false), 5000);
+            }
+
+            setIsFlipping(false);
+
+            // Update balances and stats in the background
+            setTimeout(() => {
+              refreshBalances();
+              fetchGlobalStats();
+              fetchPlayerStatistics();
+              fetchNewGame();
+            }, 0);
+          });
         }
+      };
 
-        setIsFlipping(false);
-      }, 1000); // This should match the duration of the flip animation
+      // Start the animation
+      animateCoin();
 
-      // Update statistics and fetch a new game
-      refreshBalances();
-      fetchGlobalStats();
-      fetchPlayerStatistics();
-      fetchNewGame();
     } catch (error: any) {
       console.error('Error placing bet:', error);
       setResult({ message: error.message || 'Error placing bet.', isWin: false });
-
       setIsFlipping(false);
       fetchNewGame();
-
     }
   };
-
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
@@ -144,7 +154,7 @@ export default function HeadsOrTailsGame() {
         </CardHeader>
         <CardContent className="flex flex-col items-center">
           <div className="mb-8">
-          <Coin isFlipping={isFlipping} result={flipResult} />
+            <Coin isFlipping={isFlipping} result={flipResult} />
           </div>
           <form action={handleBet} className="w-full space-y-4">
             <input type="hidden" name="gameId" value={gameId ?? ''} />

@@ -11,6 +11,7 @@ import { useFormState } from 'react-dom';
 import { signUp } from '@/app/actions/auth/signUpAction';
 import { signIn } from '@/app/actions/auth/signInAction';
 import logo from '../../../public/logo.webp';
+import { useWallet } from '@/app/context/WalletContext';
 
 
 type AuthState = {
@@ -23,6 +24,7 @@ export function AuthPage() {
   const router = useRouter();
   const [signUpState, signUpAction] = useFormState<AuthState, FormData>(signUp, null);
   const [signInState, signInAction] = useFormState<AuthState, FormData>(signIn, null);
+  const { getAllInfo } = useWallet();
   const handleSubmit = isSignUp ? signUpAction : signInAction;
 
   useEffect(() => {
@@ -30,6 +32,7 @@ export function AuthPage() {
     if (state?.error) {
       toast.error(state.error);
     } else if (state !== null && !state.error) {
+      getAllInfo();
       router.push('/');
     }
   }, [signUpState, signInState, isSignUp, router]);
