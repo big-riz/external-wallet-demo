@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,6 +10,8 @@ import { toast } from 'react-toastify';
 import { useFormState } from 'react-dom';
 import { signUp } from '@/app/actions/auth/signUpAction';
 import { signIn } from '@/app/actions/auth/signInAction';
+import logo from '../../../public/logo.webp';
+
 
 type AuthState = {
   error?: string;
@@ -32,11 +35,23 @@ export function AuthPage() {
   }, [signUpState, signInState, isSignUp, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-primary to-primary-foreground">
       <div className="w-full max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>{isSignUp ? 'Create an Account' : 'Sign In'}</CardTitle>
+        <Card className="shadow-lg">
+          <CardHeader className="flex flex-col items-center space-y-4">
+            <Image
+              src={logo}
+              alt="On Chain Casino Logo"
+              width={200}
+              height={200}
+              className="rounded-lg"
+            />
+            <CardTitle className="text-2xl font-bold text-center">
+              On Chain Casino
+            </CardTitle>
+            <p className="text-muted-foreground text-center">
+              {isSignUp ? 'Create an Account' : 'Sign In'}
+            </p>
           </CardHeader>
           <CardContent>
             <form action={handleSubmit}>
@@ -61,7 +76,7 @@ export function AuthPage() {
                   />
                 </div>
               </div>
-              <Button className="w-full mt-4" type="submit">
+              <Button className="w-full mt-6" type="submit">
                 {isSignUp ? 'Sign Up' : 'Sign In'}
               </Button>
             </form>

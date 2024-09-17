@@ -1,0 +1,2 @@
+ALTER TABLE "coin_flip_games" ALTER COLUMN "wager_amount" SET DATA TYPE numeric(10, 5);--> statement-breakpoint
+ALTER TABLE "coin_flip_games" ALTER COLUMN "wager_payout_amount" SET DATA TYPE numeric(10, 5);
