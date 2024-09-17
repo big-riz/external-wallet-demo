@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ const Coin = ({ isFlipping, result }: { isFlipping: boolean; result: 'Heads' | '
       <Image src="/Tails.webp" alt="Tails" width={150} height={150} />
     </div>
   </div>
-)
+);
 
 const DotsLoader = () => (
   <span className={styles.loaderDots}>
@@ -40,7 +40,6 @@ export default function HeadsOrTailsGame() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [gameId, setGameId] = useState<number | null>(null);
   const [randomSeedHash, setRandomSeedHash] = useState<string>('');
-  const [isPending, startTransition] = useTransition();
   const [flipResult, setFlipResult] = useState<'Heads' | 'Tails' | null>(null);
 
   const { refreshBalances } = useWallet();
@@ -61,81 +60,59 @@ export default function HeadsOrTailsGame() {
     }
   };
 
-  const fetchGlobalStats = () => {
-    startTransition(async () => {
-      try {
-        const stats = await fetchStats();
-        setGlobalResults(stats);
-      } catch (error) {
-        console.error('Error fetching statistics:', error);
-      }
-    });
+  const fetchGlobalStats = async () => {
+    try {
+      const stats = await fetchStats();
+      setGlobalResults(stats);
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+    }
   };
 
-  const fetchPlayerStatistics = () => {
-    startTransition(async () => {
-      try {
-        const stats = await fetchPlayerStats();
-        setPlayerResults(stats);
-      } catch (error) {
-        console.error('Error fetching player statistics:', error);
-      }
-    });
+  const fetchPlayerStatistics = async () => {
+    try {
+      const stats = await fetchPlayerStats();
+      setPlayerResults(stats);
+    } catch (error) {
+      console.error('Error fetching player statistics:', error);
+    }
   };
 
-  const handleBet = async (formData: FormData) => {
+  const handleBet = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
     if (!gameId) return;
 
     setIsFlipping(true);
     setResult(null);
     setFlipResult(null);
 
-    // Start the coin flip animation immediately
-    const flipDuration = 1000; // 1 second flip animation
-    const flipStartTime = Date.now();
+    const formData = new FormData(event.currentTarget);
 
     try {
-      // Make the bet in the background while the animation is playing
-      const betPromise = makeBet(formData);
+      const betResult = await makeBet(formData);
 
-      // Animate the coin flip
-      const animateCoin = () => {
-        const elapsedTime = Date.now() - flipStartTime;
-        if (elapsedTime < flipDuration) {
-          // Continue the flipping animation
-          requestAnimationFrame(animateCoin);
-        } else {
-          // Animation is complete, now we can set the final result
-          betPromise.then((betResult) => {
-            const isWin = betResult.playerSelection === betResult.result;
-            setFlipResult(betResult.result as 'Heads' | 'Tails');
-            setResult({
-              message: isWin
-                ? `You won $${Number(betResult.wagerPayoutAmount).toFixed(3)}!`
-                : `You lost $${Number(betResult.wagerAmount).toFixed(2)}.`,
-              isWin,
-            });
+      const isWin = betResult.playerSelection === betResult.result;
+      setFlipResult(betResult.result as 'Heads' | 'Tails');
+      setResult({
+        message: isWin
+          ? `You won $${Number(betResult.wagerPayoutAmount).toFixed(3)}!`
+          : `You lost $${Number(betResult.wagerAmount).toFixed(2)}.`,
+        isWin,
+      });
 
-            if (isWin) {
-              setShowConfetti(true);
-              setTimeout(() => setShowConfetti(false), 5000);
-            }
+      if (isWin) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
+      }
 
-            setIsFlipping(false);
+      setIsFlipping(false);
 
-            // Update balances and stats in the background
-            setTimeout(() => {
-              refreshBalances();
-              fetchGlobalStats();
-              fetchPlayerStatistics();
-              fetchNewGame();
-            }, 0);
-          });
-        }
-      };
-
-      // Start the animation
-      animateCoin();
+      // Update balances and stats in the background
+      refreshBalances();
+      fetchGlobalStats();
+      fetchPlayerStatistics();
+      fetchNewGame();
 
     } catch (error: any) {
       console.error('Error placing bet:', error);
@@ -156,7 +133,7 @@ export default function HeadsOrTailsGame() {
           <div className="mb-8">
             <Coin isFlipping={isFlipping} result={flipResult} />
           </div>
-          <form action={handleBet} className="w-full space-y-4">
+          <form onSubmit={handleBet} className="w-full space-y-4">
             <input type="hidden" name="gameId" value={gameId ?? ''} />
             <RadioGroup
               name="playerSelection"
@@ -190,8 +167,8 @@ export default function HeadsOrTailsGame() {
                 To Win: ${(wager * 1.98).toFixed(3)}
               </p>
             </div>
-            <Button type="submit" className="w-full" disabled={isFlipping || isPending}>
-              {isPending || isFlipping ? <span className='flex item-center justify-center'><DotsLoader/> </span> : 'Place Bet'}
+            <Button type="submit" className="w-full" disabled={isFlipping}>
+              {isFlipping ? <span className='flex item-center justify-center'><DotsLoader/> </span> : 'Place Bet'}
             </Button>
           </form>
           {result && !isFlipping && (

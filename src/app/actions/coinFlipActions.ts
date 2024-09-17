@@ -73,10 +73,6 @@ export async function makeBet(formData: FormData) {
     }
   // Make user payment
   const wagerPaymentId = await makeUserPayment(user.authToken, wagerAmount);
-  console.log({
-    wagerAmount:  wagerAmount.toFixed(2),
-    wagerPayoutAmount: (wagerAmount * 1.98).toFixed(3),
-  })
   await db
     .update(coinFlipGames)
     .set({

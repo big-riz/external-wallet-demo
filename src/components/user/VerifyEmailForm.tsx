@@ -68,9 +68,8 @@ export function VerifyEmailForm({ requestId }: VerifyEmailFormProps) {
           requestId,
         });
         toast.success('Wallet created successfully!');
-        await getAllInfo();
         // Refresh the page to reflect updated user data
-        router.push('/profile');
+        router.refresh();
       } catch (error) {
         console.error('Error creating wallet:', error);
         toast.error('Failed to create wallet. Please try again.');

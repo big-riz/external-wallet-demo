@@ -25,7 +25,6 @@ export async function makePayment(formData: FormData) {
     const paymentResult = await pay(user.authToken, destination, amount);
     return { success: true, data: paymentResult };
   } catch (error: any) {
-    console.error('Payment error:', error.message);
     return { error: error.message || 'Failed to process payment' };
   }
 }

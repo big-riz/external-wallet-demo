@@ -46,3 +46,29 @@ export async function getBalances(accessToken: string) {
     const account = getAccountFromAuthToken(accessToken);
     return account.wallet.getTotalBalance();
 }
+
+export async function createPaymentRequest(destination: string, amount: number) {
+    const result = await fetch('https://iae.cloud.handcash.io/v3/paymentRequests', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'App-Id': process.env.HANDCASH_APP_ID as string,
+            'App-Secret': process.env.HANDCASH_APP_SECRET as string,
+        },
+        body: JSON.stringify({
+            receivers: [{
+                destination,
+                amount,
+            }],
+            product: {
+                name: 'Deposit into Casino',
+            },
+            currencyCode: 'BSV',
+            denominatedIn: 'USD',
+            expirationType: 'never',
+        }),
+    });
+    const res = (await result.json());
+    return res.paymentRequestUrl as string;
+}

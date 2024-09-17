@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Types } from '@handcash/handcash-sdk';
 
 interface WalletInfo {
@@ -13,8 +13,6 @@ interface WalletContextType extends WalletInfo {
   refreshBalances: () => Promise<void>;
   getAllInfo: () => Promise<void>;
   getBSVBalance: () => Types.UserBalance | undefined;
-  balances: Types.UserBalance[];
-  depositInfo: Types.DepositInfo | undefined;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -33,6 +31,10 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
   getAllInfoActionName,
 }) => {
   const [walletInfo, setWalletInfo] = useState<WalletInfo>(initialWalletInfo);
+
+  useEffect(() => {
+    setWalletInfo(initialWalletInfo);
+  }, [initialWalletInfo]);
 
   const refreshBalances = useCallback(async () => {
     try {
@@ -63,8 +65,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
     refreshBalances,
     getAllInfo,
     getBSVBalance,
-    balances : walletInfo.balances,
-    depositInfo: walletInfo.depositInfo,
   };
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;

@@ -6,6 +6,7 @@ import { decrypt } from '@/lib/session'
 import { SessionPayload } from '@/lib/definitions'
 import { getUser as fetchUser } from '@/lib/db';
 
+
 export const verifySession = cache(async () => {
   const cookie = cookies().get('session')?.value
   if (!cookie) {
