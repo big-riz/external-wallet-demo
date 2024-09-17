@@ -1,8 +1,9 @@
 'use server';
 import { getBalances } from '@/lib/handcash-client';
 import { verifySession, getUser } from '@/lib/dal'
+import { withLogging } from './logger';
 
-export async function getUserBalances() {
+export const getUserBalances = withLogging('getBalances', async () => {
   const session = await verifySession()
   const user = await getUser(session.userId);
   if (!user.authToken) {
@@ -10,4 +11,4 @@ export async function getUserBalances() {
   }
   const res = await getBalances(user.authToken);
   return res.items;
-}
+});

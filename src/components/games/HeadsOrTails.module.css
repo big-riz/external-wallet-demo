@@ -1,51 +1,50 @@
 .coin {
-    width: 150px;
-    height: 150px;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 0.1s;
-  }
-  
-  .coin.flipping {
-    animation: flip 1s linear;
-  }
-  
-  .side {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backface-visibility: hidden;
-    border: 4px solid #e2e8f0;
-    overflow: hidden;
-  }
-  
-  .heads {
-    background-color: #fbbf24;
-  }
-  
-  .tails {
-    background-color: #94a3b8;
-    transform: rotateY(180deg);
-  }
-  
-  @keyframes flip {
-    0% { transform: rotateY(0); }
-    100% { transform: rotateY(1800deg); }
-  }
-  
-  .coin.heads {
-    transform: rotateY(0deg);
-  }
-  
-  .coin.tails {
-    transform: rotateY(180deg);
-  }
+  width: 150px;
+  height: 150px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.1s;
+}
 
-  /* Loader Dots Styles */
+.coin.flipping {
+  animation: flip 1s linear;
+}
+
+.side {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  border: 4px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.heads {
+  background-color: #fbbf24;
+}
+
+.tails {
+  background-color: #94a3b8;
+  transform: rotateY(180deg);
+}
+
+@keyframes flip {
+  0% { transform: rotateY(0); }
+  100% { transform: rotateY(1800deg); }
+}
+
+.coin.heads {
+  transform: rotateY(0deg);
+}
+
+.coin.tails {
+  transform: rotateY(180deg);
+}
+
+/* Loader Dots Styles */
 .loaderDots {
   display: inline-flex;
   margin-left: 8px; /* Adjust spacing between text and dots */

@@ -2,8 +2,10 @@
 import { getDepositInfo } from '@/lib/handcash-client';
 import { verifySession, getUser } from '@/lib/dal'
 import { deleteUserAuth } from '@/lib/db';
+import { withLogging } from './logger';
 
-export async function getWalletDepositInfo() {
+
+export const getWalletDepositInfo = withLogging('getWalletDepositInfo', async () => {
   const session = await verifySession()
   const user = await getUser(session.userId);
   if (!user.authToken) {
@@ -16,4 +18,4 @@ export async function getWalletDepositInfo() {
     await deleteUserAuth(user.id);
     return { error: e.message };
   }
-}
+});
