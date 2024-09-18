@@ -15,7 +15,7 @@ export async function CreatePaymentRequest() {
     }
     let redirectUrl;
     if(domain) {
-        redirectUrl = `https//${domain}/profile`;
+        redirectUrl = `https://${domain}/profile`;
     }
     const depositInfo = await getDepositInfo(user.authToken);
     return createPaymentRequest(depositInfo.id, 1, redirectUrl);
