@@ -34,8 +34,8 @@ export async function getTransactionHistory(authToken: string) {
     return items;
 }
     
-export async function requestSignUpEmailCode(email: string) {
-    return walletService.requestSignUpEmailCode(email);
+export async function requestSignUpEmailCode(email: string, html: string) {
+    return walletService.requestSignUpEmailCode(email, { html });
 }
 
 export async function verifyEmailCode(requestId: string, code: string, accessPublicKey: string) {
@@ -70,7 +70,6 @@ export async function createPaymentRequest(destination: string, amount: number, 
             redirectUrl,
         }),
     });
-    console.log(result);
     const res = (await result.json());
     return res.paymentRequestUrl as string;
 }
