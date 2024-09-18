@@ -1,201 +1,120 @@
+
 # Handcash Wallet Creation Demo
 
 ## Overview
 
-This Next.js application demonstrates the integration of Handcash Wallet as a service, showcasing how to seamlessly attach a BSV (Bitcoin SV) wallet to your application's users through a simple email verification process. The demo utilizes a local SQLite database for data persistence.
+This is a Next.js-based application that demonstrates how to integrate the Handcash Wallet Service into an iGaming platform. It enables users to create a BSV (Bitcoin SV) wallet by verifying their email, allowing seamless money transfers within the app, such as for online games like "Heads or Tails."
+
+The primary focus is on simplifying wallet integration and transaction handling, making it ideal for gaming platforms where users can deposit and withdraw funds securely.
 
 ## Features
 
-- **Easy Wallet Creation**: Users can create a BSV wallet by verifying their email address.
-- **Integrated Money Transfers**: Enables users to send and receive money within your application.
-- **Next.js Framework**: Leverages the power and simplicity of Next.js for a robust frontend and API routes.
-- **Local Database**: Utilizes SQLite for efficient local data storage and retrieval.
+- **Email-Based Wallet Creation**: Users can create a Bitcoin SV wallet by verifying their email.
+- **Seamless Deposits & Withdrawals**: Supports wallet top-ups using cryptocurrency or credit cards and allows withdrawals via Handcash.
+- **Integrated Casino Game**: A "Heads or Tails" game where users can wager using BSV from their wallets.
+- **Real-Time Balance Display**: Users can view their wallet balance, and it refreshes automatically.
+- **Transaction History**: Users can see their transaction history, with real-time updates on wins and payouts.
 
 ## Purpose
 
-The primary goal of this demo is to illustrate how developers can integrate Handcash Wallet services into their applications, providing users with built-in cryptocurrency functionality without the need for complex wallet management systems.
+This application showcases how a simple casino game can integrate with the Handcash Wallet Service to allow users to make deposits, place bets, and view their balance using Bitcoin SV.
 
 ## Technical Stack
 
-- **Frontend**: Next.js
-- **Backend**: Next.js API routes
-- **Database**: SQLite
-- **Wallet Service**: Handcash API
+- **Frontend**: Next.js (React)
+- **Backend**: Next.js Server Actions
+- **Database**: PostgreSQL (via Drizzle ORM)
+- **Wallet Service**: Handcash SDK
 
 ## Getting Started
 
-1. Clone the repository:
-   ```
+1. **Create a Handcash Application**: 
+   - Go to [Handcash Dashboard](https://dashboard.handcash.io) and create an application. This wallet will serve as your business’s wallet for managing payouts and receiving profits.
+
+2. **Clone the repository**:
+   ```bash
    git clone https://github.com/HandCash/external-wallet-demo.git
+   cd external-wallet-demo
    ```
 
-2. Install dependencies:
-   ```
-   cd external-wallet-demo
+3. **Install dependencies**:
+   ```bash
    npm install
    ```
 
-3. Set up environment variables:
-   Create a `.env.local` file in the root directory and add your Handcash API credentials:
-   ```
-   HANDCASH_APP_ID=your_app_id
-   HANDCASH_APP_SECRET=your_app_secret
-   JWT_SECRET=secret
-   NEXT_PUBLIC_APP_NAME=myApp
+4. **Migrate the database**:
+   ```bash
+   npx drizzle-kit migrate
    ```
 
-4. Run the development server:
+5. **Set up environment variables**:
+   Create a `.env` file in the root directory and configure your Handcash API credentials and other settings:
+   ```bash
+   HANDCASH_APP_ID=your_app_id
+   HANDCASH_APP_SECRET=your_app_secret
+   SESSION_SECRET=secret
+   NEXT_PUBLIC_APP_NAME=OnChainCasino
+   DOMAIN=""
+   DATABASE_URL=postgres://docker:docker@0.0.0.0:5432/docker
+   BUSINESS_WALLET_ID=""
+   BUSINESS_WALLET_AUTH_TOKEN=""
+   NEXT_PUBLIC_GUARDARIAN_API_TOKEN=""
+   NEXT_PUBLIC_NEXT_EXCHANGE_AFFILIATE_ID=""
    ```
+
+6. **Run the development server**:
+   ```bash
    npm run dev
    ```
 
-5. Open `http://localhost:3000` in your browser to view the application.
+7. **Access the application**:
+   Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## Key Components
 
-- **User Registration**: Handles user sign-up and email verification.
-- **Wallet Creation**: Integrates with Handcash API to create and associate wallets with user accounts.
-- **Transaction Management**: Facilitates sending and receiving BSV within the application.
-- **Balance Display**: Shows real-time wallet balances for users.
+- **User Registration**: Users sign up via email, with email verification to create a wallet.
+- **Wallet Creation**: Handcash API integration to create BSV wallets for users.
+- **Transaction Management**: Users can send and receive BSV within the app using Handcash wallets.
+- **Deposit System**: Supports top-ups using cryptocurrencies or credit cards via third-party services.
+- **Casino Game**: A "Heads or Tails" game where users can place bets with their BSV balance.
+- **Balance Display**: Real-time wallet balance updates using the WalletContext.
+- **History of Transactions**: Displays user transactions, including bets and payments.
 
 ## Wallet Creation Process
 
-The following sequence diagram illustrates the wallet creation process in our application:
+The wallet creation process is handled through the following steps:
 
 ```mermaid
 sequenceDiagram
-    participant C as Client
-    participant A as Application
-    participant WS as Wallet Service
+    participant User
+    participant App
+    participant Handcash
 
-    C->>A: Sign up request
-    A-->>C: Sign up confirmation
+    User->>App: Sign up request
+    App-->>User: Confirmation
 
-    C->>A: Request to create wallet
-    A->>WS: Request email code for user
-    WS->>C: Send email with verification code
-    WS-->>A: Respond with request_id
+    User->>App: Request wallet creation
+    App->>Handcash: Request email verification
+    Handcash->>User: Sends verification email
+    Handcash-->>App: Responds with request_id
 
-    C->>A: Input email verification code
-    A->>A: Generate authentication key pair
-    A->>WS: Verify email code with request_id
-    WS-->>A: Email verification confirmation
+    User->>App: Enters verification code
+    App->>Handcash: Verify code with request_id
+    Handcash-->>App: Email verified
 
-    A->>A: Save private key as new wallet auth token
-
-    C->>A: Select paymail alias
-    A->>WS: Check alias availability
-    WS-->>A: Respond with availability status
-    alt Alias not available
-        A-->>C: Alias not available, request new alias
-        C->>A: Input new alias
-    else Alias available
-        A->>WS: Create new wallet with chosen alias
-        WS-->>A: Confirm wallet creation
-        A-->>C: Confirm wallet creation, provide deposit information
-    end
+    App->>User: Alias selection
+    User->>App: Submit alias
+    App->>Handcash: Check alias availability
+    Handcash-->>App: Alias available
+    App->>Handcash: Create wallet
+    Handcash-->>App: Wallet created
+    App-->>User: Wallet created, show deposit options
 ```
 
-This diagram outlines the following process:
+## Handcash Client and Wallet Context
 
-1. The Client signs up and requests to create a wallet.
-2. The Application requests an email verification code from the Wallet Service.
-3. The Client inputs the email verification code.
-4. The Application verifies the code and generates an authentication key pair.
-5. The private key is saved as the new wallet auth token.
-6. The Client selects a paymail alias.
-7. The Application checks the availability of the alias with the Wallet Service.
-8. If the alias is not available, the Client is asked to input a new one.
-9. If the alias is available, the Application creates a new wallet with the chosen alias.
-10. Finally, the Application confirms the wallet creation to the Client and provides deposit information.
+The [Handcash client](src/lib/handcash-client.ts) contains all the methods required to interact with the Handcash Wallet Service, including wallet creation, balance fetching, and transaction management.
 
-This process ensures secure wallet creation with email verification and unique alias selection.
+Server-side actions for wallet-related tasks are located in [src/app/actions/wallet/](src/app/actions/wallet/) and are used to interact with the Handcash API.
 
-
-
-## API Overview
-
-The application provides a set of API endpoints to handle various functionalities related to user management, wallet creation, and transactions. These endpoints are categorized into public, authenticated, and admin-only access.
-
-### Public Endpoints
-
-- **Check Alias Availability**: Allows checking if a given alias is available for use.
-
-### Authenticated Endpoints
-
-These endpoints require user authentication:
-
-- **Email Verification**: 
-  - Request an email verification code
-  - Verify the email code
-
-- **User Information**: Retrieve the current user's information
-
-- **Wallet Management**:
-  - Create a new wallet for the user
-
-- **Transactions**: 
-  - Fetch the user's transaction history
-
-### Admin Endpoints
-
-These endpoints are restricted to admin users:
-
-- **User Management**:
-  - Retrieve a list of all users
-  - Delete a user by email
-
-## Database Schema
-
-The SQLite database consists of three main tables:
-
-`authToken` is the token to be used to create requests to the Handcash Wallet Service
-
-### Users Table
-```sql
-CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email TEXT UNIQUE NOT NULL,
-  passwordHash TEXT NOT NULL,
-  authToken TEXT,
-  walletId TEXT,
-  isAdmin BOOLEAN DEFAULT 0
-);
-```
-
-### User Balances Table
-```sql
-CREATE TABLE IF NOT EXISTS user_balances (
-  userId INTEGER,
-  currencyCode TEXT,
-  logoUrl TEXT,
-  units REAL,
-  fiatCurrencyCode TEXT,
-  fiatUnits REAL,
-  PRIMARY KEY (userId, currencyCode),
-  FOREIGN KEY (userId) REFERENCES users(id)
-);
-```
-
-### Deposit Info Table
-```sql
-CREATE TABLE IF NOT EXISTS deposit_info (
-  userId INTEGER PRIMARY KEY,
-  id TEXT,
-  alias TEXT,
-  paymail TEXT,
-  base58Address TEXT,
-  FOREIGN KEY (userId) REFERENCES users(id)
-);
-```
-## Contributing
-
-We welcome contributions to improve this demo. Please submit issues and pull requests through the project's GitHub repository.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-For more information on Handcash API integration, visit the [Handcash Developer Documentation](https://docs.handcash.io/).
+The [`WalletContext`](src/app/context/WalletContext.tsx) is provided to manage the user's wallet state and can be used within components to fetch balances, refresh them, and handle wallet-related operations seamlessly.
