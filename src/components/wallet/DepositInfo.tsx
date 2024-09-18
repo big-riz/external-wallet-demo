@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,8 +12,9 @@ import {
   WalletIcon,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import TopUpDialog from '@/components/wallet/TopUpDialog';
 
-export function DepositInfo({ depositLink }: { depositLink: string  }) {
+export function DepositInfo({ depositLink }: { depositLink: string }) {
   const { depositInfo } = useWallet();
 
   if (!depositInfo) {
@@ -44,15 +47,32 @@ export function DepositInfo({ depositLink }: { depositLink: string  }) {
             value={depositInfo.base58Address}
           />
         </div>
-        {depositLink && (
-        <Button
-          className="w-full mt-4"
-          onClick={() => window.open(depositLink, '_blank')}
-        >
-          Deposit $1 with HandCash
-          <ExternalLinkIcon className="ml-2 h-4 w-4" />
-        </Button>
-        )}
+        <div className="flex flex-col space-y-2 mt-4">
+          {depositLink && (
+            <Button
+              className="w-full"
+              onClick={() => window.open(depositLink, '_blank')}
+              variant="default"
+              size="sm"
+            >
+              Deposit $1 with HandCash
+              <ExternalLinkIcon className="ml-2 h-4 w-4" />
+            </Button>
+          )}
+          {/* Top-Up Wallet Option */}
+          <TopUpDialog
+            trigger={
+              <Button
+                className="w-full"
+                variant="secondary"
+                size="sm"
+              >
+                Top-up Wallet With Crypto or Credit Card
+              </Button>
+            }
+            depositAddress={depositInfo.base58Address}
+          />
+        </div>
       </CardContent>
     </Card>
   );
