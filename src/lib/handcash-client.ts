@@ -47,7 +47,7 @@ export async function getBalances(accessToken: string) {
     return account.wallet.getTotalBalance();
 }
 
-export async function createPaymentRequest(destination: string, amount: number) {
+export async function createPaymentRequest(destination: string, amount: number, redirectUrl: string | undefined) {
     const result = await fetch('https://iae.cloud.handcash.io/v3/paymentRequests', {
         method: 'POST',
         headers: {
@@ -67,6 +67,7 @@ export async function createPaymentRequest(destination: string, amount: number) 
             currencyCode: 'BSV',
             denominatedIn: 'USD',
             expirationType: 'never',
+            redirectUrl,
         }),
     });
     const res = (await result.json());
