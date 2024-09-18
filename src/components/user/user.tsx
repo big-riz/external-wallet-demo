@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { getUserData } from '@/app/actions/getUserData';
-import { getTransactionHistory } from '@/app/actions/getTransactionHistory';
+import { getTransactionHistory } from '@/app/actions/wallet/getTransactionHistory';
 import { Types } from '@handcash/handcash-sdk';
 import UserPageClient from '@/components/user/UserClient';
-import { CreatePaymentRequest } from '@/app/actions/createPaymentRequest';
+import { CreatePaymentRequest } from '@/app/actions/wallet/createPaymentRequest';
 
 export default async function UserPage() {
   const user = await getUserData();

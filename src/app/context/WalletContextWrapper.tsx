@@ -1,6 +1,6 @@
 import { WalletProvider } from '@/app/context/WalletContext';
-import { getUserBalances } from '@/app/actions/getUserBalances';
-import { getWalletDepositInfo } from '@/app/actions/getWalletDepositInfo';
+import { getUserBalances } from '@/app/actions/wallet/getUserBalances';
+import { getWalletDepositInfo } from '@/app/actions/wallet/getWalletDepositInfo';
 import { Types } from '@handcash/handcash-sdk';
 
 interface WalletInfo {

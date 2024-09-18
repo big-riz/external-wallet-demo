@@ -1,11 +1,10 @@
-// src/components/user/VerifyEmail.tsx
 'use client';
 
 import React, { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { VerifyEmailForm } from '@/components/user/VerifyEmailForm';
-import { requestEmailCodeAction } from '@/app/actions/requestEmailCodeAction';
+import { requestEmailCodeAction } from '@/app/actions/wallet/requestEmailCodeAction';
 
 export function VerifyEmail() {
   const [showForm, setShowForm] = useState(false);

@@ -1,7 +1,7 @@
 'use server';
 import { getBalances } from '@/lib/handcash-client';
 import { verifySession, getUser } from '@/lib/dal'
-import { withLogging } from './logger';
+import { withLogging } from '@/app/actions/logger';
 
 export const getUserBalances = withLogging('getBalances', async () => {
   const session = await verifySession()

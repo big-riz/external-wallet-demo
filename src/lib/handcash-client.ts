@@ -70,6 +70,7 @@ export async function createPaymentRequest(destination: string, amount: number, 
             redirectUrl,
         }),
     });
+    console.log(result);
     const res = (await result.json());
     return res.paymentRequestUrl as string;
 }

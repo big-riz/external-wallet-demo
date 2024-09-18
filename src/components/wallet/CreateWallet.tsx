@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import debounce from 'lodash.debounce';
 import { Check, X } from 'lucide-react';
-import { checkAliasAvailabilityAction } from '@/app/actions/checkAliasAvailabilityAction';
-import { createWalletAction } from '@/app/actions/createWalletAction';
+import { checkAliasAvailabilityAction } from '@/app/actions/wallet/checkAliasAvailabilityAction';
+import { createWalletAction } from '@/app/actions/wallet/createWalletAction';
 
 interface CreateWalletProps {
   requestId: string;

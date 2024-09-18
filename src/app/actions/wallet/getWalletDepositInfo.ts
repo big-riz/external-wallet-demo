@@ -2,7 +2,7 @@
 import { getDepositInfo } from '@/lib/handcash-client';
 import { verifySession, getUser } from '@/lib/dal'
 import { deleteUserAuth } from '@/lib/db';
-import { withLogging } from './logger';
+import { withLogging } from '@/app/actions/logger';
 
 
 export const getWalletDepositInfo = withLogging('getWalletDepositInfo', async () => {

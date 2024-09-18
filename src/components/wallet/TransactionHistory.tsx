@@ -31,7 +31,7 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
               {transactions.map((tx) => {
                 const isReceive = tx.type.toLowerCase() === 'receive' || tx.type.toLowerCase() === 'incoming';
                 const participantAlias = tx.participants[0]?.alias || 'N/A';
-                const amount = `${tx.units} ${tx.currency.code}`;
+                const amount = `${tx.units.toFixed(3)} ${tx.currency.code}`;
                 const fiatEquivalent = `${tx.fiatEquivalent.units} ${tx.fiatEquivalent.currencyCode}`;
                 const time = new Date(tx.time * 1000).toLocaleString();
                 const transactionId = tx.transactionId;

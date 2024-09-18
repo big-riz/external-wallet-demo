@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ArrowRightIcon, WalletIcon } from 'lucide-react';
-import { makePayment } from '@/app/actions/makePayment';
+import { makePayment } from '@/app/actions/wallet/makePayment';
 import { useWallet } from '@/app/context/WalletContext';
 
 export function SendPayment() {
