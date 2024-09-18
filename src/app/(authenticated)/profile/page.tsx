@@ -1,5 +1,5 @@
 import React from 'react';
-import UserPage from '@/components/user/User';
+import UserPage from '@/components/user/user';
 
 export default function Home() {
 
