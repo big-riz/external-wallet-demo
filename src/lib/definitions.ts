@@ -2,5 +2,5 @@ import { JWTPayload } from 'jose';
 
 export interface SessionPayload extends JWTPayload {
   userId: number;
-  expiresAt: String;
+  expiresAt: string;
 }

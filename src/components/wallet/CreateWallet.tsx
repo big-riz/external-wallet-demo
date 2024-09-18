@@ -59,7 +59,7 @@ export function CreateWallet({ requestId, onWalletCreated }: CreateWalletProps) 
         formData.append('verificationCode', verificationCode);
         formData.append('requestId', requestId);
 
-        await createWalletAction(formData);
+        await createWalletAction({ alias, verificationCode, requestId });
         toast.success('Wallet created successfully!');
         onWalletCreated();
       } catch (error) {
