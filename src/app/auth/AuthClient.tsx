@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import { useFormState } from 'react-dom';
 import { signUp } from '@/app/actions/auth/signUpAction';
 import { signIn } from '@/app/actions/auth/signInAction';

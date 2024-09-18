@@ -3,7 +3,7 @@
 
 import React, { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import { VerifyEmailForm } from '@/components/user/VerifyEmailForm';
 import { requestEmailCodeAction } from '@/app/actions/requestEmailCodeAction';
 
@@ -34,7 +34,7 @@ export function VerifyEmail() {
     <>
       {!showForm ? (
         <div className="mt-4">
-          <p>You don't have a wallet yet.</p>
+          <p>You dont have a wallet yet.</p>
           <Button onClick={handleVerifyEmail} disabled={isPending}>
             {isPending ? 'Sending Verification Code...' : 'Verify Email'}
           </Button>

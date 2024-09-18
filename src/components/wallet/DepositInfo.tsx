@@ -9,9 +9,9 @@ import {
   UserIcon,
   WalletIcon,
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 
-export function DepositInfo({ depositLink }: { depositLink: string }) {
+export function DepositInfo({ depositLink }: { depositLink: string  }) {
   const { depositInfo } = useWallet();
 
   if (!depositInfo) {
@@ -44,6 +44,7 @@ export function DepositInfo({ depositLink }: { depositLink: string }) {
             value={depositInfo.base58Address}
           />
         </div>
+        {depositLink && (
         <Button
           className="w-full mt-4"
           onClick={() => window.open(depositLink, '_blank')}
@@ -51,6 +52,7 @@ export function DepositInfo({ depositLink }: { depositLink: string }) {
           Deposit $1 with HandCash
           <ExternalLinkIcon className="ml-2 h-4 w-4" />
         </Button>
+        )}
       </CardContent>
     </Card>
   );

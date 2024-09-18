@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import debounce from 'lodash.debounce';
 import { Check, X } from 'lucide-react';
 import { checkAliasAvailabilityAction } from '@/app/actions/checkAliasAvailabilityAction';

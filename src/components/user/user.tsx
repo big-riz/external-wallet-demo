@@ -7,10 +7,14 @@ import { CreatePaymentRequest } from '@/app/actions/createPaymentRequest';
 
 export default async function UserPage() {
   const user = await getUserData();
-  const depositLink = await CreatePaymentRequest();
+  const depositLinkResult = await CreatePaymentRequest();
+
   if (!user) {
     redirect('/auth');
   }
+
+  const depositLink = typeof depositLinkResult === 'string' ? depositLinkResult : '';
+
 
   const txHistoryResult = await getTransactionHistory();
   const txHistory: Types.PaymentResult[] = Array.isArray(txHistoryResult) ? txHistoryResult : [];

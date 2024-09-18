@@ -8,6 +8,7 @@ import { Banknote, Send, History } from "lucide-react";
 import { DepositInfo } from '@/components/wallet/DepositInfo';
 import { SendPayment } from '@/components/wallet/SendPayment';
 import { TransactionHistory } from '@/components/wallet/TransactionHistory';
+import { ToastContainer } from '../Toaster';
 
 interface UserPageClientProps {
   user: {
@@ -43,6 +44,7 @@ export default function UserPageClient({ user, txHistory, depositLink }: UserPag
         
         {/* Main content with tabs */}
         <main className="flex-1 mt-8 lg:mt-0">
+          <ToastContainer />
           <Tabs defaultValue="deposit" className="space-y-4">
             <TabsList>
               <TabsTrigger value="deposit">

@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import "./globals.css";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/ReactToastify.min.css';
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -29,18 +27,6 @@ export default function RootLayout({
         )}
       >
         {children}
-        <ToastContainer
-          position="bottom-left"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
       </body>
     </html>
   );

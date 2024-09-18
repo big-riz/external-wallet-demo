@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/ReactToastify.min.css';
+
 import NavBar from "@/components/NavBar";
 import WalletWrapper from "@/app/context/WalletContextWrapper";
 import { getUserData } from "@/app/actions/getUserData";
@@ -35,18 +34,6 @@ export default async function AuthenticatedLayout({
         <WalletWrapper>
           <NavBar userEmail={user.email} />
           {children}
-          <ToastContainer
-            position="bottom-left"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
         </WalletWrapper>
       </body>
     </html>
