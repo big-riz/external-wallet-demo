@@ -31,8 +31,8 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
               {transactions.map((tx) => {
                 const isReceive = tx.type.toLowerCase() === 'receive' || tx.type.toLowerCase() === 'incoming';
                 const participantAlias = tx.participants[0]?.alias || 'N/A';
-                const amount = `${tx.units.toFixed(3)} ${tx.currency.code}`;
-                const fiatEquivalent = `${tx.fiatEquivalent.units} ${tx.fiatEquivalent.currencyCode}`;
+                const amount = `${tx.units} ${tx.currency.code}`;
+                const fiatEquivalent = `${tx.fiatEquivalent.units.toFixed(3)} ${tx.fiatEquivalent.currencyCode}`;
                 const time = new Date(tx.time * 1000).toLocaleString();
                 const transactionId = tx.transactionId;
                 return (
@@ -57,7 +57,9 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
                     <td className="py-4 px-4 text-sm text-gray-500">{time}</td>
                     <td className="py-4 px-4">
                       <Link href={`https://whatsonchain.com/tx/${transactionId}`} passHref>
+                        <span className="text-blue-600 hover:text-blue-800">
                           {transactionId.slice(0, 8)}...
+                        </span>
                       </Link>
                     </td>
                   </tr>

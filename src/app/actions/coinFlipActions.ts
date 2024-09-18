@@ -37,9 +37,10 @@ export async function createNewGame() {
 }
 
 export async function makeBet(formData: FormData) {
-  const gameId = parseInt(formData.get('gameId') as string);
-  const wagerAmount = parseFloat(formData.get('wagerAmount') as string);
-  const playerSelection = formData.get('playerSelection') as 'Heads' | 'Tails';
+  try {
+    const gameId = parseInt(formData.get('gameId') as string);
+    const wagerAmount = parseFloat(formData.get('wagerAmount') as string);
+    const playerSelection = formData.get('playerSelection') as 'Heads' | 'Tails';
 
 
   const session = await verifySession();
@@ -88,6 +89,10 @@ export async function makeBet(formData: FormData) {
   const gameResult = await processGameResult(gameId);
 
   return gameResult;
+  }
+  catch (error: any) {
+    return { error: error.message || 'Failed to process bet' };
+  }
 }
 
 async function processGameResult(gameId: number) {

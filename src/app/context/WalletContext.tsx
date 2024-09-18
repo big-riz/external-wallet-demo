@@ -38,7 +38,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
 
   const refreshBalances = useCallback(async () => {
     try {
-      const { getUserBalances } = await import(`@/app/actions/${refreshBalancesActionName}`);
+      const { getUserBalances } = await import(`@/app/actions/wallet/${refreshBalancesActionName}`);
       const newBalances = await getUserBalances();
       setWalletInfo(prev => ({ ...prev, balances: newBalances }));
     } catch (error) {
@@ -48,7 +48,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({
 
   const getAllInfo = useCallback(async () => {
     try {
-      const { fetchWalletInfo } = await import(`@/app/actions/${getAllInfoActionName}`);
+      const { fetchWalletInfo } = await import(`@/app/actions/wallet/${getAllInfoActionName}`);
       const newInfo = await fetchWalletInfo();
       setWalletInfo(newInfo);
     } catch (error) {

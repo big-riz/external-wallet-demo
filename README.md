@@ -53,12 +53,12 @@ This application showcases how a simple casino game can integrate with the Handc
    HANDCASH_APP_ID=your_app_id
    HANDCASH_APP_SECRET=your_app_secret
    SESSION_SECRET=secret
-   NEXT_PUBLIC_APP_NAME=OnChainCasino
-   DOMAIN=""
+   NEXT_PUBLIC_APP_NAME=AppName
+   DOMAIN="Domain for application"
    DATABASE_URL=postgres://docker:docker@0.0.0.0:5432/docker
-   BUSINESS_WALLET_ID=""
-   BUSINESS_WALLET_AUTH_TOKEN=""
-   NEXT_PUBLIC_GUARDARIAN_API_TOKEN=""
+   BUSINESS_WALLET_ID="wallet id found in handcash dashboard"
+   BUSINESS_WALLET_AUTH_TOKEN="access token found in handcash dashboard"
+   NEXT_PUBLIC_GUARDARIAN_API_TOKEN="Guardarian API Key for crypto and credit card deposits "
    NEXT_PUBLIC_NEXT_EXCHANGE_AFFILIATE_ID=""
    ```
 

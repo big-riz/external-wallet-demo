@@ -92,6 +92,10 @@ export default function HeadsOrTailsGame() {
     try {
       const betResult = await makeBet(formData);
 
+      if ('error' in betResult) {
+        throw new Error(betResult.error);
+      }
+
       const isWin = betResult.playerSelection === betResult.result;
       setFlipResult(betResult.result as 'Heads' | 'Tails');
       setResult({
@@ -106,8 +110,6 @@ export default function HeadsOrTailsGame() {
         setTimeout(() => setShowConfetti(false), 5000);
       }
 
-      setIsFlipping(false);
-
       // Update balances and stats in the background
       refreshBalances();
       fetchGlobalStats();
@@ -117,8 +119,8 @@ export default function HeadsOrTailsGame() {
     } catch (error: any) {
       console.error('Error placing bet:', error);
       setResult({ message: error.message || 'Error placing bet.', isWin: false });
+    } finally {
       setIsFlipping(false);
-      fetchNewGame();
     }
   };
 
