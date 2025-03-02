@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+  import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import "./globals.css";
-import Link from 'next/link';
+import WebGLPage from "./webgl";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -27,14 +27,7 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        <div>
-          <nav>
-            <Link href="/">Home</Link>
-            <Link href="/webgl">Unity WebGL</Link>
-            {/* Other links */}
-          </nav>
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );

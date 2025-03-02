@@ -1,8 +1,12 @@
 import React from 'react';
-import index from './webgl-build/index.html';
+import fs from 'fs';
+import path from 'path';
+
+const index = fs.readFileSync(path.join(process.cwd(), 'public/webgl-build/index.html'), 'utf-8');
+
 const WebGLPage = () => {
   return (
-    <div dangerouslySetInnerHTML={{ __html: index }} />
+    index
   );
 };
 
