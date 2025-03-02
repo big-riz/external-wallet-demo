@@ -32,7 +32,7 @@ export default function UserPageClient({ user, txHistory, depositLink }: UserPag
           <h1 className="text-2xl font-bold">User Information</h1>
           <p>ID: {user.id}</p>
           <p>Email: {user.email}</p>
-          <VerifyEmail />
+          <VerifyEmail email={user.email} />
         </div>
       </div>
     );

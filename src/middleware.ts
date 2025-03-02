@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { decrypt } from '@/lib/session';
 
-// Define public routes
-const publicRoutes = ['/auth'];
+// Public paths that don't require authentication
+const publicPaths = ['/auth', '/api/auth', '/webgl', '/api/handcash/success'];
 
 export async function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-  const isPublicRoute = publicRoutes.includes(path);
+  if (publicPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
 
   const sessionCookie = request.cookies.get('session')?.value;
 
@@ -17,17 +18,15 @@ export async function middleware(request: NextRequest) {
     session = await decrypt(sessionCookie);
   }
 
-  if (!isPublicRoute && !session?.userId) {
+  if (!session?.userId) {
     return NextResponse.redirect(new URL('/auth', request.url));
-  }
-
-  if (isPublicRoute && session?.userId) {
-    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
+  ],
 };

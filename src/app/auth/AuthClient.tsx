@@ -7,11 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { useFormState } from 'react-dom';
-import { signUp } from '@/app/actions/auth/signUpAction';
+import { useFormState } from "react-dom";
+import { signUpAction } from '@/app/actions/auth/signUpAction';
 import { signIn } from '@/app/actions/auth/signInAction';
 import logo from '../../../public/logo.webp';
-
 
 type AuthState = {
   error?: string;
@@ -21,9 +20,9 @@ type AuthState = {
 export function AuthClient() {
   const [isSignUp, setIsSignUp] = useState(false);
   const router = useRouter();
-  const [signUpState, signUpAction] = useFormState<AuthState, FormData>(signUp, null);
-  const [signInState, signInAction] = useFormState<AuthState, FormData>(signIn, null);
-  const handleSubmit = isSignUp ? signUpAction : signInAction;
+  const [signUpState, signUpDispatch] = useFormState<AuthState, FormData>(signUpAction, null);
+  const [signInState, signInDispatch] = useFormState<AuthState, FormData>(signIn, null);
+  const handleSubmit = isSignUp ? signUpDispatch : signInDispatch;
 
   useEffect(() => {
     const state = isSignUp ? signUpState : signInState;
@@ -54,29 +53,18 @@ export function AuthClient() {
             </p>
           </CardHeader>
           <CardContent>
-            <form action={handleSubmit}>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="john@example.com"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                  />
-                </div>
+            <form action={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  className="w-full"
+                />
               </div>
-              <Button className="w-full mt-6" type="submit">
+              <Button type="submit" className="w-full">
                 {isSignUp ? 'Sign Up' : 'Sign In'}
               </Button>
             </form>

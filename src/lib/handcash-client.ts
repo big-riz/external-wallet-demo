@@ -3,7 +3,7 @@ import { WalletService, Environments } from '@handcash/handcash-sdk'
 export const walletService = new WalletService({
     appId: process.env.HANDCASH_APP_ID as string,
     appSecret: process.env.HANDCASH_APP_SECRET as string,
-    env: Environments.iae,
+    env: Environments.prod,
     
 });
   
@@ -35,7 +35,18 @@ export async function getTransactionHistory(authToken: string) {
 }
     
 export async function requestSignUpEmailCode(email: string, html: string) {
-    return walletService.requestSignUpEmailCode(email, { html });
+    try {
+        console.log('Requesting email code for:', email);
+        console.log('Using APP_ID:', process.env.HANDCASH_APP_ID);
+        // Don't log the full secret, just a portion to verify it's present
+        console.log('APP_SECRET present:', !!process.env.HANDCASH_APP_SECRET);
+        
+        // Make a real API call regardless of environment
+        return await walletService.requestSignUpEmailCode(email, { html });
+    } catch (error) {
+        console.error('Error in requestSignUpEmailCode:', error);
+        throw error;
+    }
 }
 
 export async function verifyEmailCode(requestId: string, code: string, accessPublicKey: string) {

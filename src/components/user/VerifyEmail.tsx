@@ -6,21 +6,30 @@ import { toast } from 'react-hot-toast';
 import { VerifyEmailForm } from '@/components/user/VerifyEmailForm';
 import { requestEmailCodeAction } from '@/app/actions/wallet/requestEmailCodeAction';
 
-export function VerifyEmail() {
+interface VerifyEmailProps {
+  email: string;
+}
+
+export function VerifyEmail({ email }: VerifyEmailProps) {
   const [showForm, setShowForm] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleVerifyEmail = () => {
+    if (!email) {
+      toast.error('Email is required');
+      return;
+    }
+
     startTransition(async () => {
       try {
-        const result = await requestEmailCodeAction();
-        if (result && result.requestId) {
+        const result = await requestEmailCodeAction(email);
+        if (result.success && result.requestId) {
           setRequestId(result.requestId);
           setShowForm(true);
           toast.success('Verification code sent to your email');
         } else {
-          toast.error('Failed to request email verification');
+          toast.error(result.error || 'Failed to request email verification');
         }
       } catch (error) {
         console.error('Error requesting email code:', error);
@@ -39,7 +48,7 @@ export function VerifyEmail() {
           </Button>
         </div>
       ) : (
-        <VerifyEmailForm requestId={requestId as string} /> // Render the form component
+        <VerifyEmailForm requestId={requestId as string} email={email} />
       )}
     </>
   );

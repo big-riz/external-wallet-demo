@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use server';
 
 import { randomBytes, createHash } from 'crypto';
@@ -19,7 +20,9 @@ export async function createNewGame() {
   const randomSeedHash = createHash('sha256').update(randomSeedBuffer).digest('hex');
 
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
-
+  if (userId === null) {
+    throw new Error("User ID is required to create a coin flip game");
+  }
   const [game] = await db
     .insert(coinFlipGames)
     .values({
@@ -45,6 +48,7 @@ export async function makeBet(formData: FormData) {
 
   const session = await verifySession();
   const userId = session.userId;
+  
   const user = await getUser(session.userId);
   if(!user.authToken) {
     throw new Error('User needs to verify email');
@@ -123,6 +127,7 @@ async function processGameResult(gameId: number) {
         throw new Error('Wager payout amount not set');
     }
     // Process payout
+
     payoutId = await makePayout(parseFloat(game.wagerPayoutAmount), user.walletId, businessWalletAuthToken);
   }
 

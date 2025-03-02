@@ -1,5 +1,5 @@
 'use server';
-import { requestSignUpEmailCode } from '@/lib/handcash-client';
+import { handCashService } from '@/lib/handcash/handcash-connect';
 import { verifySession, getUser } from '@/lib/dal';
 
 const html = `<!DOCTYPE html>
@@ -50,9 +50,15 @@ text-align: center;
 </body>
 </html>`;
 
-export async function requestEmailCodeAction() {
-  const session = await verifySession();
-  const user = await getUser(session.userId);
-  const requestId = await requestSignUpEmailCode(user.email, html);
-  return { email: user.email, requestId };
+export async function requestEmailCodeAction(email: string) {
+  try {
+    const session = await verifySession()
+    const user = await getUser(session.userId as number);
+    
+    const result = await handCashService.requestEmailCode(email);
+    return { success: true, requestId: result.requestId };
+  } catch (error: any) {
+    console.log(error);
+    return { success: false, error: 'Failed to request email verification code', errorMessage: "Full account exist - redirect user to login instead" };
+  }
 }

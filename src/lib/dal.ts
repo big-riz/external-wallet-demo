@@ -10,7 +10,7 @@ import { getUser as fetchUser } from '@/lib/db';
 export const verifySession = cache(async () => {
   const cookie = cookies().get('session')?.value
   if (!cookie) {
-    redirect('/auth')
+    return { isAuth: false, userId: null }
   }
 
   let session: SessionPayload | null;
@@ -22,7 +22,8 @@ export const verifySession = cache(async () => {
   }
 
   if (!isValidSession(session)) {
-    redirect('/auth')
+    return { isAuth: false, userId: null }
+    
   }
 
   return { isAuth: true, userId: session.userId }
@@ -40,7 +41,7 @@ function isValidSession(session: SessionPayload | null): session is SessionPaylo
 export const getUser = async (userId: number) => {
     const user = await fetchUser(userId);
     if (!user) {
-      redirect('/auth');
+      return null;
     }
     return user;
 };

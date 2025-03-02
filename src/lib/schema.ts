@@ -5,10 +5,10 @@ import { InferModel } from 'drizzle-orm';
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   email: varchar('email', { length: 255 }).notNull().unique(),
-  passwordHash: varchar('passwordHash', { length: 255 }).notNull(),
   authToken: varchar('authToken', { length: 255 }),
   walletId: varchar('walletId', { length: 255 }),
   isAdmin: boolean('isAdmin').notNull().default(false),
+  handle: varchar('handle', { length: 24 }).notNull().unique(),
 });
 
 export type User = InferModel<typeof users>;

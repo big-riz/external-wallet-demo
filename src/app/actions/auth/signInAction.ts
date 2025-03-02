@@ -1,42 +1,41 @@
 'use server'
 
 import { z } from 'zod';
-import { findUserByEmail } from '@/lib/db';
+import { findUserByEmail, updateUserHandle } from '@/lib/db';
 import { createSession } from '@/lib/session';
-import bcrypt from 'bcrypt';
 
-const signInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
+import { handCashService } from '@/lib/handcash/handcash-connect';
+
+const FormSchema = z.object({
+  email: z.string().email('Invalid email address'),
 });
 
 export async function signIn(prevState: any, formData: FormData) {
-  const validatedFields = signInSchema.safeParse({
+  const validatedFields = FormSchema.safeParse({
     email: formData.get('email'),
-    password: formData.get('password'),
   });
 
   if (!validatedFields.success) {
-    return { 
-      error: 'Invalid input', 
-      errors: validatedFields.error.flatten().fieldErrors 
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
     };
   }
 
-  const { email, password } = validatedFields.data;
+  const { email } = validatedFields.data;
 
   try {
     const user = await findUserByEmail(email);
     if (!user) {
-      return { error: 'Invalid credentials' };
+      return { error: 'User not found' };
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!passwordMatch) {
-      return { error: 'Invalid credentials' };
+    const publicProfile = await handCashService.getAccountFromAuthToken(user.authToken as string);
+    const pp = await publicProfile.profile.getCurrentProfile();
+    if (!publicProfile || !pp) {
+      return { error: 'Failed to get public profile' };
     }
-
-    await createSession(user.id);
+    await createSession(user.id, pp);
+    await updateUserHandle(user.id, pp.publicProfile.handle);
     return { success: true };
   } catch (error) {
     console.error('Sign in error:', error);

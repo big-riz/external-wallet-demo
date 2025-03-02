@@ -2,41 +2,34 @@
 
 import { z } from 'zod';
 import { createUser, findUserByEmail } from '@/lib/db';
-import bcrypt from 'bcrypt';
+
 import { createSession } from '@/lib/session';
 
-const SignupFormSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email.' }).trim(),
-  password: z
-    .string()
-    .min(1)
-    .trim(),
+const FormSchema = z.object({
+  email: z.string().email('Invalid email address'),
 })
- 
 
-export async function signUp(prevState: any, formData: FormData) {
-    const validatedFields = SignupFormSchema.safeParse({
-        email: formData.get('email'),
-        password: formData.get('password'),
-    })
+export async function signUpAction(formData: FormData) {
+  const validatedFields = FormSchema.safeParse({
+    email: formData.get('email'),
+  })
+
   if (!validatedFields.success) {
-    return { 
-      error: 'Invalid input', 
-      errors: validatedFields.error.flatten().fieldErrors 
-    };
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    }
   }
 
-  const { email, password } = validatedFields.data;
-  const hashedPassword = await bcrypt.hash(password, 10)
-
+  const { email } = validatedFields.data;
+  
   try {
-    await createUser(email, hashedPassword);
+    await createUser(email);
     const user = await findUserByEmail(email);
 
     if (!user) {
       return { error: 'Failed to create user' };
     }
-    await createSession(user.id)
+    //await createSession(user.id, null)
     return { success: true };
   } catch (error) {
     console.error('Sign up error:', error);

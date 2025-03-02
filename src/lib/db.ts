@@ -24,8 +24,16 @@ const pool = new Pool({
 export const db = drizzle(pool);
 
 
-export async function createUser(email: string, passwordHash: string) {
-  await db.insert(users).values({ email, passwordHash }).execute();
+export async function createUser(email: string) {
+  await db.insert(users).values({ email }).execute();
+}
+
+export async function updateUserHandle(id: number, handle: string) {
+  await db
+    .update(users)
+    .set({ handle })
+    .where(eq(users.id, id))
+    .execute();
 }
 
 export async function findUserByEmail(email: string): Promise<User | undefined> {
