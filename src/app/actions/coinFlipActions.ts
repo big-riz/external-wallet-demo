@@ -1,4 +1,3 @@
-/* eslint-disable */
 'use server';
 
 import { randomBytes, createHash } from 'crypto';
@@ -7,6 +6,7 @@ import { coinFlipGames, coinFlipStats } from '@/lib/schema';
 import { verifySession, getUser } from '@/lib/dal';
 import { eq, isNull } from 'drizzle-orm';
 import { pay } from '@/lib/handcash-client';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 const businessWalletId = process.env.BUSINESS_WALLET_ID as string
 const businessWalletAuthToken = process.env.BUSINESS_WALLET_AUTH_TOKEN as string;
@@ -17,7 +17,8 @@ export async function createNewGame() {
 
   const randomSeedBuffer = randomBytes(8);
   const randomSeed = randomSeedBuffer.toString('hex');
-  const randomSeedHash = createHash('sha256').update(randomSeedBuffer).digest('hex');
+ 
+  const randomSeedHash = createHash('sha256').update(randomSeed).digest('hex');
 
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
   if (userId === null) {
@@ -45,26 +46,32 @@ export async function makeBet(formData: FormData) {
     const wagerAmount = parseFloat(formData.get('wagerAmount') as string);
     const playerSelection = formData.get('playerSelection') as 'Heads' | 'Tails';
 
+    const session = await verifySession();
+    if (!session.userId) {
+      throw new Error('User not authenticated');
+    }
+    const userId = session.userId;
+    
+    const user = await getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    if (!user.authToken) {
+      throw new Error('User needs to verify email');
+    }
+    if (!user.walletId) {
+      throw new Error('User wallet not connected');
+    }
 
-  const session = await verifySession();
-  const userId = session.userId;
-  
-  const user = await getUser(session.userId);
-  if(!user.authToken) {
-    throw new Error('User needs to verify email');
-  }
-  if(!user.walletId) {
-    throw new Error('User wallet not connected');
-  }
-  const [game] = await db
-    .select()
-    .from(coinFlipGames)
-    .where(eq(coinFlipGames.id, gameId))
-    .execute();
+    const [game] = await db
+      .select()
+      .from(coinFlipGames)
+      .where(eq(coinFlipGames.id, gameId))
+      .execute();
 
-  if (!game) throw new Error('Game not found');
-  if (game.playerId !== userId) throw new Error('Unauthorized');
-  if (game.expiresAt < new Date()) throw new Error('Game expired');
+    if (!game) throw new Error('Game not found');
+    if (game.playerId !== userId) throw new Error('Unauthorized');
+    if (game.expiresAt < new Date()) throw new Error('Game expired');
 
         
     // Validate wagerAmount
@@ -94,13 +101,12 @@ export async function makeBet(formData: FormData) {
 
   return gameResult;
   }
-  catch (error: any) {
-    return { error: error.message || 'Failed to process bet' };
+  catch (error) {
+    return { error: error instanceof Error ? error.message : 'Failed to process bet' };
   }
 }
 
 async function processGameResult(gameId: number) {
-  // Retrieve the updated game
   const [game] = await db
     .select()
     .from(coinFlipGames)
@@ -111,7 +117,10 @@ async function processGameResult(gameId: number) {
 
   const userId = game.playerId;
   const user = await getUser(userId);
-  if(!user.walletId) {
+  if (!user) {
+    throw new Error('User not found');
+  }
+  if (!user.walletId) {
     throw new Error('User wallet not connected');
   }
   // Compute the game result
@@ -173,7 +182,7 @@ async function updateStats(
 }
 
 async function upsertStats(
-  tx: any,
+  tx: PostgresJsDatabase,
   playerId: number | null,
   playerWins: boolean,
   wagerPayoutAmount: number,

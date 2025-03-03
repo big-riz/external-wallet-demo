@@ -9,6 +9,9 @@ const domain = process.env.DOMAIN;
 export async function CreatePaymentRequest() {
   try {
     const session = await verifySession()
+    if (!session || !session.userId) {
+      return { error: 'Not authenticated' };
+    }
     const user = await getUser(session.userId);
     if(!user || !user.authToken) {
         return { error: 'User not found' };

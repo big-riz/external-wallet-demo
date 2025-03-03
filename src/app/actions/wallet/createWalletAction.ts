@@ -14,28 +14,42 @@ interface CreateWalletInput {
 export async function createWalletAction(input: CreateWalletInput) {
   const { alias, verificationCode, requestId } = input;
 
-  // Verify session and get user
-  const session = await verifySession();
-  const user = await getUser(session.userId);
+  try {
+    // Verify session and get user
+    const session = await verifySession();
+    if (!session || !session.userId) {
+      throw new Error('Not authenticated');
+    }
 
-  // Generate key pair
-  const keyPair = Crypto.generateAuthenticationKeyPair();
+    const user = await getUser(session.userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-  // Verify email code
-  await walletService.verifyEmailCode(requestId, verificationCode, keyPair.publicKey);
+    // Generate key pair
+    const keyPair = Crypto.generateAuthenticationKeyPair();
 
-  // Save private key as authToken
-  await updateUserAuthToken(user.id, keyPair.privateKey);
+    // Verify email code
+    await walletService.verifyEmailCode(requestId, verificationCode, keyPair.publicKey);
 
-  // Create wallet account
-  const { id: walletId } = await walletService.createWalletAccount(
-    keyPair.publicKey,
-    user.email,
-    alias
-  );
+    // Save private key as authToken
+    await updateUserAuthToken(user.id, keyPair.privateKey);
 
-  // Update user with walletId
-  await updateUserWalletCreated(user.id, walletId);
+    // Create wallet account
+    const { id: walletId } = await walletService.createWalletAccount(
+      keyPair.publicKey,
+      user.email,
+      alias
+    );
 
-  return { success: true };
+    // Update user with walletId
+    await updateUserWalletCreated(user.id, walletId);
+
+    return { success: true };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    };
+  }
 }
